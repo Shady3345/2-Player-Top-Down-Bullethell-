@@ -1,0 +1,819 @@
+fileFormatVersion: 2
+guid: 3d7968a967e673041a980d46ca4e9482
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 7824301479886801679
+    second: color ramps and v00_0
+  - first:
+      213: 6230987019587692398
+    second: color ramps and v00_1
+  - first:
+      213: -6748640873226093660
+    second: color ramps and v00_2
+  - first:
+      213: -4618918276832225672
+    second: color ramps and v00_3
+  - first:
+      213: 3224259555430096394
+    second: color ramps and v00_4
+  - first:
+      213: -7904389773645443279
+    second: color ramps and v00_5
+  - first:
+      213: -6070795640255084288
+    second: color ramps and v00_6
+  - first:
+      213: -4832564640511137186
+    second: color ramps and v00_7
+  - first:
+      213: 8441188541281829387
+    second: color ramps and v00_8
+  - first:
+      213: -6773110455069106217
+    second: color ramps and v00_9
+  - first:
+      213: -6203512684447351862
+    second: color ramps and v00_10
+  - first:
+      213: -6113918004782386994
+    second: color ramps and v00_11
+  - first:
+      213: 8363223976859799182
+    second: color ramps and v00_12
+  - first:
+      213: 2495224765975119326
+    second: color ramps and v00_13
+  - first:
+      213: -7601306908044150762
+    second: color ramps and v00_14
+  - first:
+      213: 2241827928971601357
+    second: color ramps and v00_15
+  - first:
+      213: 7604928650074224848
+    second: color ramps and v00_16
+  - first:
+      213: 3227985207846421583
+    second: color ramps and v00_17
+  - first:
+      213: -5945305930619010384
+    second: color ramps and v00_18
+  - first:
+      213: 2940733154484873100
+    second: color ramps and v00_19
+  - first:
+      213: 7820500473177670296
+    second: color ramps and v00_20
+  - first:
+      213: 5435262079260549147
+    second: color ramps and v00_21
+  - first:
+      213: -7952475683042368502
+    second: color ramps and v00_22
+  - first:
+      213: -3747002938812984202
+    second: color ramps and v00_23
+  - first:
+      213: -969618237380558513
+    second: color ramps and v00_24
+  - first:
+      213: -7285546015880761310
+    second: color ramps and v00_25
+  - first:
+      213: 6532525865937728968
+    second: color ramps and v00_26
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: color ramps and v00_0
+      rect:
+        serializedVersion: 2
+        x: 15
+        y: 153
+        width: 47
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f0b4734bdb0859c60800000000000000
+      internalID: 7824301479886801679
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: color ramps and v00_1
+      rect:
+        serializedVersion: 2
+        x: 52
+        y: 185
+        width: 166
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e67289e5ea9e87650800000000000000
+      internalID: 6230987019587692398
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: color ramps and v00_2
+      rect:
+        serializedVersion: 2
+        x: 191
+        y: 153
+        width: 135
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4ab3da2b1e20852a0800000000000000
+      internalID: -6748640873226093660
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: color ramps and v00_3
+      rect:
+        serializedVersion: 2
+        x: 220
+        y: 183
+        width: 19
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8761bde9c4e46efb0800000000000000
+      internalID: -4618918276832225672
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: color ramps and v00_4
+      rect:
+        serializedVersion: 2
+        x: 238
+        y: 183
+        width: 29
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a0ed1199bfedebc20800000000000000
+      internalID: 3224259555430096394
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: color ramps and v00_5
+      rect:
+        serializedVersion: 2
+        x: 196
+        y: 133
+        width: 7
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 13f02af4167fd4290800000000000000
+      internalID: -7904389773645443279
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: color ramps and v00_6
+      rect:
+        serializedVersion: 2
+        x: 228
+        y: 133
+        width: 7
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0090b96978330cba0800000000000000
+      internalID: -6070795640255084288
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: color ramps and v00_7
+      rect:
+        serializedVersion: 2
+        x: 195
+        y: 93
+        width: 12
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e5a683040184fecb0800000000000000
+      internalID: -4832564640511137186
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: color ramps and v00_8
+      rect:
+        serializedVersion: 2
+        x: 225
+        y: 119
+        width: 14
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b0283354140252570800000000000000
+      internalID: 8441188541281829387
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: color ramps and v00_9
+      rect:
+        serializedVersion: 2
+        x: 225
+        y: 111
+        width: 14
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7df1f153de31102a0800000000000000
+      internalID: -6773110455069106217
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: color ramps and v00_10
+      rect:
+        serializedVersion: 2
+        x: 225
+        y: 87
+        width: 14
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: acbb2e3c412b8e9a0800000000000000
+      internalID: -6203512684447351862
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: color ramps and v00_11
+      rect:
+        serializedVersion: 2
+        x: 15
+        y: 15
+        width: 46
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ec0b413b7fff62ba0800000000000000
+      internalID: -6113918004782386994
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: color ramps and v00_12
+      rect:
+        serializedVersion: 2
+        x: 15
+        y: 41
+        width: 26
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e8e02cd85e3201470800000000000000
+      internalID: 8363223976859799182
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: color ramps and v00_13
+      rect:
+        serializedVersion: 2
+        x: 56
+        y: 15
+        width: 50
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ed544b254b1d0a220800000000000000
+      internalID: 2495224765975119326
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: color ramps and v00_14
+      rect:
+        serializedVersion: 2
+        x: 102
+        y: 15
+        width: 60
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6183e4df3abb28690800000000000000
+      internalID: -7601306908044150762
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: color ramps and v00_15
+      rect:
+        serializedVersion: 2
+        x: 155
+        y: 33
+        width: 21
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dc5e6e9af929c1f10800000000000000
+      internalID: 2241827928971601357
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: color ramps and v00_16
+      rect:
+        serializedVersion: 2
+        x: 164
+        y: 15
+        width: 75
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0d87dd980522a8960800000000000000
+      internalID: 7604928650074224848
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: color ramps and v00_17
+      rect:
+        serializedVersion: 2
+        x: 175
+        y: 33
+        width: 13
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f44c6e5a17b1ccc20800000000000000
+      internalID: 3227985207846421583
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: color ramps and v00_18
+      rect:
+        serializedVersion: 2
+        x: 240
+        y: 25
+        width: 23
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0b24e6471c70e7da0800000000000000
+      internalID: -5945305930619010384
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: color ramps and v00_19
+      rect:
+        serializedVersion: 2
+        x: 261
+        y: 33
+        width: 24
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c87e84c29359fc820800000000000000
+      internalID: 2940733154484873100
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: color ramps and v00_20
+      rect:
+        serializedVersion: 2
+        x: 261
+        y: 15
+        width: 109
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 892878ddebff78c60800000000000000
+      internalID: 7820500473177670296
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: color ramps and v00_21
+      rect:
+        serializedVersion: 2
+        x: 46
+        y: 33
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b10e977501eed6b40800000000000000
+      internalID: 5435262079260549147
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: color ramps and v00_22
+      rect:
+        serializedVersion: 2
+        x: 143
+        y: 17
+        width: 15
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a04e353108123a190800000000000000
+      internalID: -7952475683042368502
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: color ramps and v00_23
+      rect:
+        serializedVersion: 2
+        x: 176
+        y: 17
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 67415bbfda8fffbc0800000000000000
+      internalID: -3747002938812984202
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: color ramps and v00_24
+      rect:
+        serializedVersion: 2
+        x: 187
+        y: 25
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f410131b9593b82f0800000000000000
+      internalID: -969618237380558513
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: color ramps and v00_25
+      rect:
+        serializedVersion: 2
+        x: 204
+        y: 25
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2203aa0cf7a84ea90800000000000000
+      internalID: -7285546015880761310
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: color ramps and v00_26
+      rect:
+        serializedVersion: 2
+        x: 239
+        y: 15
+        width: 20
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8c5f44d0aa138aa50800000000000000
+      internalID: 6532525865937728968
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      color ramps and v00_0: 7824301479886801679
+      color ramps and v00_1: 6230987019587692398
+      color ramps and v00_10: -6203512684447351862
+      color ramps and v00_11: -6113918004782386994
+      color ramps and v00_12: 8363223976859799182
+      color ramps and v00_13: 2495224765975119326
+      color ramps and v00_14: -7601306908044150762
+      color ramps and v00_15: 2241827928971601357
+      color ramps and v00_16: 7604928650074224848
+      color ramps and v00_17: 3227985207846421583
+      color ramps and v00_18: -5945305930619010384
+      color ramps and v00_19: 2940733154484873100
+      color ramps and v00_2: -6748640873226093660
+      color ramps and v00_20: 7820500473177670296
+      color ramps and v00_21: 5435262079260549147
+      color ramps and v00_22: -7952475683042368502
+      color ramps and v00_23: -3747002938812984202
+      color ramps and v00_24: -969618237380558513
+      color ramps and v00_25: -7285546015880761310
+      color ramps and v00_26: 6532525865937728968
+      color ramps and v00_3: -4618918276832225672
+      color ramps and v00_4: 3224259555430096394
+      color ramps and v00_5: -7904389773645443279
+      color ramps and v00_6: -6070795640255084288
+      color ramps and v00_7: -4832564640511137186
+      color ramps and v00_8: 8441188541281829387
+      color ramps and v00_9: -6773110455069106217
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

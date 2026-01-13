@@ -1,0 +1,1053 @@
+fileFormatVersion: 2
+guid: b97d9a8c44b8f624e840764ea4bd803c
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 2805253784371866825
+    second: sword & shield effect sprites_0
+  - first:
+      213: 3347239716965742568
+    second: sword & shield effect sprites_1
+  - first:
+      213: -7280659474996879711
+    second: sword & shield effect sprites_2
+  - first:
+      213: -2629947673365416906
+    second: sword & shield effect sprites_3
+  - first:
+      213: -1159943478055874250
+    second: sword & shield effect sprites_4
+  - first:
+      213: -2174599319483963573
+    second: sword & shield effect sprites_5
+  - first:
+      213: -6399285303198720749
+    second: sword & shield effect sprites_6
+  - first:
+      213: -3399178321841025655
+    second: sword & shield effect sprites_7
+  - first:
+      213: 7852527646327958223
+    second: sword & shield effect sprites_8
+  - first:
+      213: 1735800040656552016
+    second: sword & shield effect sprites_9
+  - first:
+      213: 8133546152835031232
+    second: sword & shield effect sprites_10
+  - first:
+      213: -363246734670418257
+    second: sword & shield effect sprites_11
+  - first:
+      213: 2184903760994302003
+    second: sword & shield effect sprites_12
+  - first:
+      213: 6984867453449447067
+    second: sword & shield effect sprites_13
+  - first:
+      213: -8097151968236311405
+    second: sword & shield effect sprites_14
+  - first:
+      213: 909228337454920399
+    second: sword & shield effect sprites_15
+  - first:
+      213: 4793715675918023799
+    second: sword & shield effect sprites_16
+  - first:
+      213: -2706295226991136087
+    second: sword & shield effect sprites_17
+  - first:
+      213: -436701030153908277
+    second: sword & shield effect sprites_18
+  - first:
+      213: 8655517864006913044
+    second: sword & shield effect sprites_19
+  - first:
+      213: -6464506294810681551
+    second: sword & shield effect sprites_20
+  - first:
+      213: -3249829170026205442
+    second: sword & shield effect sprites_21
+  - first:
+      213: 891404609821279153
+    second: sword & shield effect sprites_22
+  - first:
+      213: 4953484199986087528
+    second: sword & shield effect sprites_23
+  - first:
+      213: -9141870186641938504
+    second: sword & shield effect sprites_24
+  - first:
+      213: -3052810399364683008
+    second: sword & shield effect sprites_25
+  - first:
+      213: 5938858852257605188
+    second: sword & shield effect sprites_26
+  - first:
+      213: -4666406614665948974
+    second: sword & shield effect sprites_27
+  - first:
+      213: -1471452761078853841
+    second: sword & shield effect sprites_28
+  - first:
+      213: -6426530386385810519
+    second: sword & shield effect sprites_29
+  - first:
+      213: 5373365294936747089
+    second: sword & shield effect sprites_30
+  - first:
+      213: -1608100623320437848
+    second: sword & shield effect sprites_31
+  - first:
+      213: -1845397699514120460
+    second: sword & shield effect sprites_32
+  - first:
+      213: 1423704614866100142
+    second: sword & shield effect sprites_33
+  - first:
+      213: 4472158177411561434
+    second: sword & shield effect sprites_34
+  - first:
+      213: -5131848038135842314
+    second: sword & shield effect sprites_35
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: sword & shield effect sprites_0
+      rect:
+        serializedVersion: 2
+        x: 21
+        y: 240
+        width: 20
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9cc2e4a34734ee620800000000000000
+      internalID: 2805253784371866825
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_1
+      rect:
+        serializedVersion: 2
+        x: 87
+        y: 244
+        width: 19
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8e772d3c9c8c37e20800000000000000
+      internalID: 3347239716965742568
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_2
+      rect:
+        serializedVersion: 2
+        x: 135
+        y: 195
+        width: 50
+        height: 48
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1ae9a3638c6e5fa90800000000000000
+      internalID: -7280659474996879711
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_3
+      rect:
+        serializedVersion: 2
+        x: 199
+        y: 193
+        width: 48
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 634703f668c808bd0800000000000000
+      internalID: -2629947673365416906
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_4
+      rect:
+        serializedVersion: 2
+        x: 263
+        y: 195
+        width: 50
+        height: 48
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 631d2f66d8d07efe0800000000000000
+      internalID: -1159943478055874250
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_5
+      rect:
+        serializedVersion: 2
+        x: 327
+        y: 193
+        width: 48
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b472a51c07542d1e0800000000000000
+      internalID: -2174599319483963573
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_6
+      rect:
+        serializedVersion: 2
+        x: 328
+        y: 161
+        width: 98
+        height: 59
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 31d567eebeb2137a0800000000000000
+      internalID: -6399285303198720749
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_7
+      rect:
+        serializedVersion: 2
+        x: 479
+        y: 191
+        width: 12
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 98d057e6351b3d0d0800000000000000
+      internalID: -3399178321841025655
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_8
+      rect:
+        serializedVersion: 2
+        x: 525
+        y: 203
+        width: 36
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fcaef443a48c9fc60800000000000000
+      internalID: 7852527646327958223
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_9
+      rect:
+        serializedVersion: 2
+        x: 591
+        y: 201
+        width: 32
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0504178b0fcc61810800000000000000
+      internalID: 1735800040656552016
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_10
+      rect:
+        serializedVersion: 2
+        x: 21
+        y: 162
+        width: 26
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0c02af3f12920e070800000000000000
+      internalID: 8133546152835031232
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_11
+      rect:
+        serializedVersion: 2
+        x: 85
+        y: 175
+        width: 24
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fae2626f40d75faf0800000000000000
+      internalID: -363246734670418257
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_12
+      rect:
+        serializedVersion: 2
+        x: 131
+        y: 142
+        width: 55
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 338fa7ef466525e10800000000000000
+      internalID: 2184903760994302003
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_13
+      rect:
+        serializedVersion: 2
+        x: 200
+        y: 167
+        width: 48
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b96aa0601fb3fe060800000000000000
+      internalID: 6984867453449447067
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_14
+      rect:
+        serializedVersion: 2
+        x: 259
+        y: 142
+        width: 55
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 39c6be87f2321af80800000000000000
+      internalID: -8097151968236311405
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_15
+      rect:
+        serializedVersion: 2
+        x: 469
+        y: 172
+        width: 12
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fc238b90b5a3e9c00800000000000000
+      internalID: 909228337454920399
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_16
+      rect:
+        serializedVersion: 2
+        x: 527
+        y: 169
+        width: 36
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 77cb0515203b68240800000000000000
+      internalID: 4793715675918023799
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_17
+      rect:
+        serializedVersion: 2
+        x: 593
+        y: 180
+        width: 32
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9a2bbd164de417ad0800000000000000
+      internalID: -2706295226991136087
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_18
+      rect:
+        serializedVersion: 2
+        x: 13
+        y: 101
+        width: 32
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bcf01a01ab680f9f0800000000000000
+      internalID: -436701030153908277
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_19
+      rect:
+        serializedVersion: 2
+        x: 81
+        y: 111
+        width: 26
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 41c0e2f63a39e1870800000000000000
+      internalID: 8655517864006913044
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_20
+      rect:
+        serializedVersion: 2
+        x: 143
+        y: 80
+        width: 43
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 13f588976c57946a0800000000000000
+      internalID: -6464506294810681551
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_21
+      rect:
+        serializedVersion: 2
+        x: 228
+        y: 81
+        width: 26
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: efea2e3969946e2d0800000000000000
+      internalID: -3249829170026205442
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_22
+      rect:
+        serializedVersion: 2
+        x: 268
+        y: 74
+        width: 49
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1b30b8f05c7ee5c00800000000000000
+      internalID: 891404609821279153
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_23
+      rect:
+        serializedVersion: 2
+        x: 356
+        y: 74
+        width: 87
+        height: 45
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8664eac92af4eb440800000000000000
+      internalID: 4953484199986087528
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_24
+      rect:
+        serializedVersion: 2
+        x: 536
+        y: 95
+        width: 35
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8b7297e308d812180800000000000000
+      internalID: -9141870186641938504
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_25
+      rect:
+        serializedVersion: 2
+        x: 616
+        y: 96
+        width: 21
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 00bef33cd1d32a5d0800000000000000
+      internalID: -3052810399364683008
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_26
+      rect:
+        serializedVersion: 2
+        x: 495
+        y: 90
+        width: 17
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 446aff329a01b6250800000000000000
+      internalID: 5938858852257605188
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_27
+      rect:
+        serializedVersion: 2
+        x: 19
+        y: 37
+        width: 32
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2d09d4b58e79d3fb0800000000000000
+      internalID: -4666406614665948974
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_28
+      rect:
+        serializedVersion: 2
+        x: 85
+        y: 47
+        width: 26
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f2f80288289549be0800000000000000
+      internalID: -1471452761078853841
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_29
+      rect:
+        serializedVersion: 2
+        x: 134
+        y: 16
+        width: 43
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9ab483da9a060d6a0800000000000000
+      internalID: -6426530386385810519
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_30
+      rect:
+        serializedVersion: 2
+        x: 194
+        y: 17
+        width: 26
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 15ced153447029a40800000000000000
+      internalID: 5373365294936747089
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_31
+      rect:
+        serializedVersion: 2
+        x: 259
+        y: 10
+        width: 49
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8aba6efc001eea9e0800000000000000
+      internalID: -1608100623320437848
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_32
+      rect:
+        serializedVersion: 2
+        x: 321
+        y: 10
+        width: 27
+        height: 45
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4f64323d194d366e0800000000000000
+      internalID: -1845397699514120460
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_33
+      rect:
+        serializedVersion: 2
+        x: 517
+        y: 31
+        width: 35
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eaf9d2addc302c310800000000000000
+      internalID: 1423704614866100142
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_34
+      rect:
+        serializedVersion: 2
+        x: 579
+        y: 32
+        width: 21
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ad779f7fa2c401e30800000000000000
+      internalID: 4472158177411561434
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sword & shield effect sprites_35
+      rect:
+        serializedVersion: 2
+        x: 389
+        y: 26
+        width: 76
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6f9b0a5266308c8b0800000000000000
+      internalID: -5131848038135842314
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      sword & shield effect sprites_0: 2805253784371866825
+      sword & shield effect sprites_1: 3347239716965742568
+      sword & shield effect sprites_10: 8133546152835031232
+      sword & shield effect sprites_11: -363246734670418257
+      sword & shield effect sprites_12: 2184903760994302003
+      sword & shield effect sprites_13: 6984867453449447067
+      sword & shield effect sprites_14: -8097151968236311405
+      sword & shield effect sprites_15: 909228337454920399
+      sword & shield effect sprites_16: 4793715675918023799
+      sword & shield effect sprites_17: -2706295226991136087
+      sword & shield effect sprites_18: -436701030153908277
+      sword & shield effect sprites_19: 8655517864006913044
+      sword & shield effect sprites_2: -7280659474996879711
+      sword & shield effect sprites_20: -6464506294810681551
+      sword & shield effect sprites_21: -3249829170026205442
+      sword & shield effect sprites_22: 891404609821279153
+      sword & shield effect sprites_23: 4953484199986087528
+      sword & shield effect sprites_24: -9141870186641938504
+      sword & shield effect sprites_25: -3052810399364683008
+      sword & shield effect sprites_26: 5938858852257605188
+      sword & shield effect sprites_27: -4666406614665948974
+      sword & shield effect sprites_28: -1471452761078853841
+      sword & shield effect sprites_29: -6426530386385810519
+      sword & shield effect sprites_3: -2629947673365416906
+      sword & shield effect sprites_30: 5373365294936747089
+      sword & shield effect sprites_31: -1608100623320437848
+      sword & shield effect sprites_32: -1845397699514120460
+      sword & shield effect sprites_33: 1423704614866100142
+      sword & shield effect sprites_34: 4472158177411561434
+      sword & shield effect sprites_35: -5131848038135842314
+      sword & shield effect sprites_4: -1159943478055874250
+      sword & shield effect sprites_5: -2174599319483963573
+      sword & shield effect sprites_6: -6399285303198720749
+      sword & shield effect sprites_7: -3399178321841025655
+      sword & shield effect sprites_8: 7852527646327958223
+      sword & shield effect sprites_9: 1735800040656552016
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
