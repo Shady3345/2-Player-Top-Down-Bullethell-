@@ -20,6 +20,8 @@ namespace FishNet.Managing
         private const string ERROR_LOGGING_PREFIX = "Error - ";
         private const string WARNING_LOGGING_PREFIX = "Warning - ";
         private const string COMMON_LOGGING_PREFIX = "Log - ";
+
+        public object Instance { get; set; }
         #endregion
 
         /// <summary>
