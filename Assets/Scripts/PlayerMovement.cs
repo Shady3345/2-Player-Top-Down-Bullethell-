@@ -15,8 +15,8 @@ public class PlayerMovement : NetworkBehaviour
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private float minX = -8f;
     [SerializeField] private float maxX = 8f;
-    [SerializeField] private float minZ = -4f;
-    [SerializeField] private float maxZ = 4f;
+    [SerializeField] private float minY = -4f;
+    [SerializeField] private float maxY = 4f;
 
     [Header("Input System")]
     [SerializeField] private InputAction moveAction; // <- Muss Vector2 sein!
@@ -97,7 +97,7 @@ public class PlayerMovement : NetworkBehaviour
     #region Movement
     private void HandleInput()
     {
-        // Lies Vector2 statt float für Top-Down Movement
+        // Lies Vector2 für 2D Movement auf X und Y Achse
         Vector2 input = moveAction.ReadValue<Vector2>();
         Debug.Log($"Input X: {input.x}, Input Y: {input.y}");
 
@@ -111,15 +111,15 @@ public class PlayerMovement : NetworkBehaviour
     [ServerRpc]
     private void Move(Vector2 input)
     {
-        // Berechne neue Position für beide Achsen (X und Z für Top-Down)
+        // Berechne neue Position für X und Y Achse (2D Movement)
         float newX = transform.position.x + input.x * moveSpeed * (float)TimeManager.TickDelta;
-        float newZ = transform.position.z + input.y * moveSpeed * (float)TimeManager.TickDelta;
+        float newY = transform.position.y + input.y * moveSpeed * (float)TimeManager.TickDelta;
 
         // Clampe die Position innerhalb der Grenzen
         newX = Mathf.Clamp(newX, minX, maxX);
-        newZ = Mathf.Clamp(newZ, minZ, maxZ);
+        newY = Mathf.Clamp(newY, minY, maxY);
 
-        transform.position = new Vector3(newX, transform.position.y, newZ);
+        transform.position = new Vector3(newX, newY, transform.position.z);
     }
     #endregion
 
