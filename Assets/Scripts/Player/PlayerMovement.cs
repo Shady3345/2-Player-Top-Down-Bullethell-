@@ -19,17 +19,28 @@ public class PlayerMovement : NetworkBehaviour
     [SerializeField] private float maxY = 4f;
 
     [Header("Input System")]
-    [SerializeField] private InputAction moveAction; // <- Muss Vector2 sein!
-    [SerializeField] private InputAction colorChangeAction;
+    private InputSystem_Actions inputActions; // <- Korrigierter Typ
+
+    private InputAction moveAction;
+    private InputAction lookAction;
 
     #region Inits
+    private void Awake()
+    {
+        // Initialisiere Input Actions
+        inputActions = new InputSystem_Actions();
+
+        moveAction = inputActions.Player.Move;
+        lookAction = inputActions.Player.Look;
+    }
+
     private void OnDisable()
     {
         playerColor.OnChange -= OnColorChanged;
         if (!IsOwner) return;
 
-        moveAction?.Disable();
-        colorChangeAction?.Disable();
+        inputActions?.Disable();
+
         if (TimeManager != null)
             TimeManager.OnTick -= OnTick;
     }
@@ -51,8 +62,8 @@ public class PlayerMovement : NetworkBehaviour
         {
             ChangeColor(Random.value, Random.value, Random.value);
 
-            moveAction?.Enable();
-            colorChangeAction?.Enable();
+            inputActions?.Enable();
+
             if (TimeManager != null)
                 TimeManager.OnTick += OnTick;
         }
@@ -63,16 +74,21 @@ public class PlayerMovement : NetworkBehaviour
     {
         if (!IsOwner) return;
         HandleInput();
-        /*
-        if (isReady.Value)
-        {
-            HandleInput();
-        }
-        else
-        {
-            CheckForChangeColor();
-        } */
+        RotateTowardsMouse();
     }
+
+    #region Rotation
+    private void RotateTowardsMouse()
+    {
+        Vector2 mouseScreenPos = lookAction.ReadValue<Vector2>();
+        Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(new Vector3(mouseScreenPos.x, mouseScreenPos.y, 0));
+
+        Vector2 direction = mouseWorldPos - transform.position;
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90f;
+
+        transform.rotation = Quaternion.Euler(0, 0, angle);
+    }
+    #endregion
 
     #region ReadyStateHandling
     [ServerRpc]
@@ -97,13 +113,10 @@ public class PlayerMovement : NetworkBehaviour
     #region Movement
     private void HandleInput()
     {
-        // Lies Vector2 für 2D Movement auf X und Y Achse
         Vector2 input = moveAction.ReadValue<Vector2>();
-        Debug.Log($"Input X: {input.x}, Input Y: {input.y}");
 
         if (input != Vector2.zero)
         {
-            Debug.Log($"Input: {input}"); // Debug zum Testen
             Move(input);
         }
     }
@@ -111,11 +124,9 @@ public class PlayerMovement : NetworkBehaviour
     [ServerRpc]
     private void Move(Vector2 input)
     {
-        // Berechne neue Position für X und Y Achse (2D Movement)
         float newX = transform.position.x + input.x * moveSpeed * (float)TimeManager.TickDelta;
         float newY = transform.position.y + input.y * moveSpeed * (float)TimeManager.TickDelta;
 
-        // Clampe die Position innerhalb der Grenzen
         newX = Mathf.Clamp(newX, minX, maxX);
         newY = Mathf.Clamp(newY, minY, maxY);
 
@@ -124,16 +135,6 @@ public class PlayerMovement : NetworkBehaviour
     #endregion
 
     #region ColorChange
-    private void CheckForChangeColor()
-    {
-        if (!colorChangeAction.triggered) return;
-
-        float r = Random.value;
-        float g = Random.value;
-        float b = Random.value;
-        ChangeColor(r, g, b);
-    }
-
     [ServerRpc]
     private void ChangeColor(float r, float g, float b)
     {
