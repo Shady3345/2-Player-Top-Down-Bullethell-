@@ -140,6 +140,7 @@ MonoBehaviour:
   _networkObjectCache: {fileID: 8937771898625465319}
   health: 10
   moveSpeed: 2
+  scoreValue: 3
   bulletPrefab: {fileID: 2998794105253784174, guid: 51528d85619b065449ee207399912559, type: 3}
   firePoint: {fileID: 9158039690256183581}
   fireRate: 2

@@ -6,6 +6,7 @@ public class Enemy : NetworkBehaviour
     [Header("Enemy Stats")]
     public int health = 3;
     public float moveSpeed = 2f;
+    public int scoreValue = 10; // Punkte beim Töten
 
     [Header("Shooting")]
     public GameObject bulletPrefab;
@@ -124,6 +125,12 @@ public class Enemy : NetworkBehaviour
     {
         if (IsServerStarted)
         {
+            // Benachrichtige GameManager über Kill
+            if (NetworkGameManager.Instance != null)
+            {
+                NetworkGameManager.Instance.EnemyKilled(scoreValue);
+            }
+
             ServerManager.Despawn(gameObject);
         }
     }
@@ -136,6 +143,17 @@ public class Enemy : NetworkBehaviour
         {
             TakeDamage(1);
             ServerManager.Despawn(other.gameObject);
+        }
+        else if (other.CompareTag("Player"))
+        {
+            // Damage Player on contact
+            PlayerMovement player = other.GetComponent<PlayerMovement>();
+            if (player != null && NetworkGameManager.Instance != null)
+            {
+                // Bestimme Spieler-Index (0 oder 1)
+                int playerIndex = player.transform.position.x < 0 ? 0 : 1;
+                NetworkGameManager.Instance.DamagePlayer(playerIndex, 10);
+            }
         }
     }
 }

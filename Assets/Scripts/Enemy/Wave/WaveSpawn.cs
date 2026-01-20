@@ -12,6 +12,7 @@ public class WaveSpawn : NetworkBehaviour
         public GameObject enemyPrefab;
         public string enemyName;
         public int spawnWeight = 1; // Höherer Wert = häufigeres Spawnen
+        public int scoreValue = 10; // Punkte beim Töten
     }
 
     [Header("Enemy Types")]
@@ -32,21 +33,38 @@ public class WaveSpawn : NetworkBehaviour
     private readonly SyncVar<bool> waveInProgress = new SyncVar<bool>(false);
 
     private List<GameObject> spawnedEnemies = new List<GameObject>();
+    private bool isSpawning = false;
 
     public override void OnStartServer()
     {
         base.OnStartServer();
-        StartCoroutine(WaveCoroutine());
+        // Warte auf Spielstart durch GameManager
+    }
+
+    private void Update()
+    {
+        // Starte Wave-System nur wenn Spiel läuft
+        if (IsServerStarted && !isSpawning && NetworkGameManager.Instance != null)
+        {
+            if (NetworkGameManager.Instance.IsGamePlaying())
+            {
+                isSpawning = true;
+                StartCoroutine(WaveCoroutine());
+            }
+        }
     }
 
     private IEnumerator WaveCoroutine()
     {
         yield return new WaitForSeconds(2f); // Kurze Pause vor erster Wave
 
-        while (true)
+        while (NetworkGameManager.Instance != null && NetworkGameManager.Instance.IsGamePlaying())
         {
             currentWave.Value++;
             waveInProgress.Value = true;
+
+            // Update GameManager
+            NetworkGameManager.Instance.SetCurrentWave(currentWave.Value);
 
             RpcAnnounceWave(currentWave.Value);
 
@@ -70,6 +88,8 @@ public class WaveSpawn : NetworkBehaviour
             // Pause zwischen Waves 
             yield return new WaitForSeconds(timeBetweenWaves);
         }
+
+        isSpawning = false;
     }
 
     private IEnumerator SpawnWave(int enemyCount)
@@ -97,6 +117,14 @@ public class WaveSpawn : NetworkBehaviour
         // Spawne Gegner
         GameObject enemy = Instantiate(selectedType.enemyPrefab, spawnPosition, Quaternion.identity);
         ServerManager.Spawn(enemy);
+
+        // Füge Score-Tracking hinzu
+        Enemy enemyScript = enemy.GetComponent<Enemy>();
+        if (enemyScript != null)
+        {
+            // Speichere Score-Wert im Enemy (erweitere Enemy.cs wenn nötig)
+            enemyScript.scoreValue = selectedType.scoreValue;
+        }
 
         spawnedEnemies.Add(enemy);
         enemiesAlive.Value++;
@@ -141,8 +169,15 @@ public class WaveSpawn : NetworkBehaviour
         // Hier kannst du UI-Updates machen
     }
 
-    // Optionale Hilfsmethode für UI
+    // Öffentliche Methoden für GameManager
     public int GetCurrentWave() => currentWave.Value;
     public int GetEnemiesAlive() => enemiesAlive.Value;
     public bool IsWaveInProgress() => waveInProgress.Value;
+
+    [Server]
+    public void StopSpawning()
+    {
+        StopAllCoroutines();
+        isSpawning = false;
+    }
 }
