@@ -1,84 +1,108 @@
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
-using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class PlayerMovement : NetworkBehaviour
 {
-    private readonly SyncVar<Color> playerColor = new SyncVar<Color>();
     private readonly SyncVar<bool> isReady = new SyncVar<bool>();
     public bool IsReady => isReady.Value;
 
-    private Renderer playerRenderer;
+    private SpriteRenderer spriteRenderer;
 
     [SerializeField] private float moveSpeed = 5f;
-    [SerializeField] private float minX = -8f;
-    [SerializeField] private float maxX = 8f;
-    [SerializeField] private float minY = -4f;
-    [SerializeField] private float maxY = 4f;
+    [SerializeField] private float minX = -16f;
+    [SerializeField] private float maxX = 16f;
+    [SerializeField] private float minY = -16f;
+    [SerializeField] private float maxY = 16f;
 
     [Header("Input System")]
-    private InputSystem_Actions inputActions; // <- Korrigierter Typ
+    private InputSystem_Actions inputActions;
 
     private InputAction moveAction;
     private InputAction lookAction;
 
-    #region Inits
     private void Awake()
     {
-        // Initialisiere Input Actions
-        inputActions = new InputSystem_Actions();
+        Debug.Log($"PlayerMovement: Awake called");
 
-        moveAction = inputActions.Player.Move;
-        lookAction = inputActions.Player.Look;
+        if (inputActions == null)
+        {
+            inputActions = new InputSystem_Actions();
+            moveAction = inputActions.Player.Move;
+            lookAction = inputActions.Player.Look;
+            Debug.Log("PlayerMovement: Input actions initialized in Awake");
+        }
+    }
+
+    public override void OnStartClient()
+    {
+        base.OnStartClient();
+
+        Debug.Log($"PlayerMovement: OnStartClient START - IsOwner: {IsOwner}, ObjectId: {ObjectId}");
+
+        spriteRenderer = GetComponent<SpriteRenderer>();
+
+        if (spriteRenderer == null)
+        {
+            Debug.LogError($"PlayerMovement: SpriteRenderer NOT FOUND! IsOwner: {IsOwner}, GameObject: {gameObject.name}");
+            return;
+        }
+
+        Debug.Log($"PlayerMovement: SpriteRenderer found!");
+
+        // Initialisiere Input hier für Owner
+        if (IsOwner)
+        {
+            Debug.Log("PlayerMovement: Owner detected, initializing input");
+            InitializeOwnerInput();
+        }
+    }
+
+    private void InitializeOwnerInput()
+    {
+        if (inputActions != null)
+        {
+            inputActions.Enable();
+            Debug.Log("PlayerMovement: Input actions enabled");
+        }
+        else
+        {
+            Debug.LogError("PlayerMovement: inputActions is null in InitializeOwnerInput!");
+        }
+
+        if (TimeManager != null)
+        {
+            TimeManager.OnTick -= OnTick; // Sicherheit: entferne falls schon registriert
+            TimeManager.OnTick += OnTick;
+            Debug.Log("PlayerMovement: OnTick registered to TimeManager");
+        }
+        else
+        {
+            Debug.LogError("PlayerMovement: TimeManager is null!");
+        }
     }
 
     private void OnDisable()
     {
-        playerColor.OnChange -= OnColorChanged;
         if (!IsOwner) return;
 
         inputActions?.Disable();
 
         if (TimeManager != null)
             TimeManager.OnTick -= OnTick;
+
+        Debug.Log("PlayerMovement: OnDisable - Input disabled and OnTick unregistered");
     }
-
-    private void Start()
-    {
-        StartCoroutine(DelayedIsOwner());
-    }
-
-    private IEnumerator DelayedIsOwner()
-    {
-        playerColor.OnChange += OnColorChanged;
-        playerRenderer = GetComponentInChildren<Renderer>();
-        playerRenderer.material = new Material(playerRenderer.material);
-        playerRenderer.material.color = playerColor.Value;
-        yield return null;
-
-        if (IsOwner)
-        {
-            ChangeColor(Random.value, Random.value, Random.value);
-
-            inputActions?.Enable();
-
-            if (TimeManager != null)
-                TimeManager.OnTick += OnTick;
-        }
-    }
-    #endregion
 
     private void OnTick()
     {
         if (!IsOwner) return;
         HandleInput();
-        RotateTowardsMouse();
+        HandleRotation();
     }
 
-    #region Rotation
-    private void RotateTowardsMouse()
+    private void HandleRotation()
     {
         Vector2 mouseScreenPos = lookAction.ReadValue<Vector2>();
         Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(new Vector3(mouseScreenPos.x, mouseScreenPos.y, 0));
@@ -86,11 +110,15 @@ public class PlayerMovement : NetworkBehaviour
         Vector2 direction = mouseWorldPos - transform.position;
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90f;
 
+        RotateServerRpc(angle);
+    }
+
+    [ServerRpc]
+    private void RotateServerRpc(float angle)
+    {
         transform.rotation = Quaternion.Euler(0, 0, angle);
     }
-    #endregion
 
-    #region ReadyStateHandling
     [ServerRpc]
     public void SetReadyStateServerRpc(string name)
     {
@@ -108,21 +136,19 @@ public class PlayerMovement : NetworkBehaviour
         NetworkGameManager.Instance.DisableNameField(Owner, isReady.Value);
         NetworkGameManager.Instance.CheckAndStartGame();
     }
-    #endregion
 
-    #region Movement
     private void HandleInput()
     {
         Vector2 input = moveAction.ReadValue<Vector2>();
 
         if (input != Vector2.zero)
         {
-            Move(input);
+            MoveServerRpc(input);
         }
     }
 
     [ServerRpc]
-    private void Move(Vector2 input)
+    private void MoveServerRpc(Vector2 input)
     {
         float newX = transform.position.x + input.x * moveSpeed * (float)TimeManager.TickDelta;
         float newY = transform.position.y + input.y * moveSpeed * (float)TimeManager.TickDelta;
@@ -132,18 +158,4 @@ public class PlayerMovement : NetworkBehaviour
 
         transform.position = new Vector3(newX, newY, transform.position.z);
     }
-    #endregion
-
-    #region ColorChange
-    [ServerRpc]
-    private void ChangeColor(float r, float g, float b)
-    {
-        playerColor.Value = new Color(r, g, b);
-    }
-
-    private void OnColorChanged(Color prevColor, Color newColor, bool asServer)
-    {
-        playerRenderer.material.color = newColor;
-    }
-    #endregion
 }

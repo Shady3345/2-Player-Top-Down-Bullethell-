@@ -1,4 +1,5 @@
 ﻿using FishNet.Object;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -10,11 +11,20 @@ public class PlayerShoot : NetworkBehaviour
     [SerializeField] private float bulletSpeed = 10f;
     [SerializeField] private float fireRate = 0.5f;
 
+    [Header("Burst Ability")]
+    [SerializeField] private int burstCount = 3;
+    [SerializeField] private float burstDelay = 0.1f;
+    [SerializeField] private float burstCooldown = 3f;
+
     [Header("Input")]
     private InputSystem_Actions inputActions;
     private InputAction shootAction;
+    private InputAction burstAction;
+
     private float nextFireTime = 0f;
+    private float nextBurstTime = 0f;
     private bool wantsToShoot = false;
+    private bool wantsToBurst = false;
     private bool inputInitialized = false;
 
     private void Awake()
@@ -22,6 +32,7 @@ public class PlayerShoot : NetworkBehaviour
         Debug.Log("PlayerShoot: Awake called");
         inputActions = new InputSystem_Actions();
         shootAction = inputActions.Player.Attack;
+        burstAction = inputActions.Player.Burst;
         Debug.Log("PlayerShoot: Input actions initialized");
     }
 
@@ -30,7 +41,6 @@ public class PlayerShoot : NetworkBehaviour
         base.OnStartClient();
         Debug.Log($"PlayerShoot: OnStartClient called - IsOwner: {base.Owner.IsLocalClient}");
 
-        // Input nur für den Owner initialisieren
         if (IsOwner && !inputInitialized)
         {
             InitializeInput();
@@ -54,8 +64,13 @@ public class PlayerShoot : NetworkBehaviour
         if (inputInitialized) return;
 
         inputActions.Enable();
+
+        // Normaler Schuss
         shootAction.performed += OnShootPerformed;
         shootAction.canceled += OnShootCanceled;
+
+        // Burst
+        burstAction.performed += OnBurstPerformed;
 
         inputInitialized = true;
         Debug.Log("PlayerShoot: Input initialized and callbacks registered!");
@@ -71,6 +86,12 @@ public class PlayerShoot : NetworkBehaviour
     {
         Debug.Log("PlayerShoot: Attack canceled");
         wantsToShoot = false;
+    }
+
+    private void OnBurstPerformed(InputAction.CallbackContext context)
+    {
+        Debug.Log("PlayerShoot: *** BURST PERFORMED! ***");
+        wantsToBurst = true;
     }
 
     public override void OnStopNetwork()
@@ -90,6 +111,7 @@ public class PlayerShoot : NetworkBehaviour
         {
             shootAction.performed -= OnShootPerformed;
             shootAction.canceled -= OnShootCanceled;
+            burstAction.performed -= OnBurstPerformed;
             inputActions?.Disable();
         }
     }
@@ -98,11 +120,21 @@ public class PlayerShoot : NetworkBehaviour
     {
         if (!IsOwner) return;
 
+        // Normaler Schuss
         if (wantsToShoot && Time.time >= nextFireTime)
         {
             Debug.Log("PlayerShoot: Shooting!");
             ShootServerRpc();
             nextFireTime = Time.time + fireRate;
+        }
+
+        // Burst Schuss
+        if (wantsToBurst && Time.time >= nextBurstTime)
+        {
+            Debug.Log("PlayerShoot: Burst activated!");
+            BurstShootServerRpc();
+            nextBurstTime = Time.time + burstCooldown;
+            wantsToBurst = false;
         }
     }
 
@@ -117,13 +149,44 @@ public class PlayerShoot : NetworkBehaviour
             return;
         }
 
+        SpawnBullet();
+    }
+
+    [ServerRpc]
+    private void BurstShootServerRpc()
+    {
+        Debug.Log("PlayerShoot: BurstShootServerRpc called");
+
+        if (playerBulletPrefab == null)
+        {
+            Debug.LogError("PlayerShoot: playerBulletPrefab is null!");
+            return;
+        }
+
+        StartCoroutine(BurstCoroutine());
+    }
+
+    private IEnumerator BurstCoroutine()
+    {
+        for (int i = 0; i < burstCount; i++)
+        {
+            SpawnBullet();
+
+            if (i < burstCount - 1)
+            {
+                yield return new WaitForSeconds(burstDelay);
+            }
+        }
+
+        Debug.Log("PlayerShoot: Burst completed!");
+    }
+
+    private void SpawnBullet()
+    {
         Vector3 spawnPos = firePoint != null ? firePoint.position : transform.position;
         GameObject bullet = Instantiate(playerBulletPrefab, spawnPos, transform.rotation);
 
         Debug.Log($"PlayerShoot: Bullet instantiated at {spawnPos}");
-
-        ServerManager.Spawn(bullet);
-        Debug.Log("PlayerShoot: Bullet spawned on network");
 
         Rigidbody2D rb = bullet.GetComponent<Rigidbody2D>();
         if (rb != null)
@@ -135,5 +198,18 @@ public class PlayerShoot : NetworkBehaviour
         {
             Debug.LogError("PlayerShoot: Bullet has no Rigidbody2D!");
         }
+
+        ServerManager.Spawn(bullet);
+        Debug.Log("PlayerShoot: Bullet spawned on network");
+    }
+
+    public bool IsBurstReady()
+    {
+        return Time.time >= nextBurstTime;
+    }
+
+    public float GetBurstCooldownRemaining()
+    {
+        return Mathf.Max(0, nextBurstTime - Time.time);
     }
 }
