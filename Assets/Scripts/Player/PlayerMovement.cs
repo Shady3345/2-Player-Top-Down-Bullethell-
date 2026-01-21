@@ -1,3 +1,4 @@
+using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using UnityEngine;
@@ -5,9 +6,6 @@ using UnityEngine.InputSystem;
 
 public class PlayerMovement : NetworkBehaviour
 {
-    private readonly SyncVar<bool> isReady = new SyncVar<bool>();
-    public bool IsReady => isReady.Value;
-
     private SpriteRenderer spriteRenderer;
 
     [SerializeField] private float moveSpeed = 5f;
@@ -22,6 +20,15 @@ public class PlayerMovement : NetworkBehaviour
     private InputAction moveAction;
     private InputAction lookAction;
 
+    // Ready System
+    private readonly SyncVar<bool> isReady = new SyncVar<bool>(false);
+    private readonly SyncVar<string> playerName = new SyncVar<string>("");
+    public bool IsReady => isReady.Value;
+    public string PlayerName => playerName.Value;
+
+    // Spieler-Identifikation
+    private int myPlayerSlot = -1;
+
     private void Awake()
     {
         Debug.Log($"PlayerMovement: Awake called");
@@ -33,6 +40,18 @@ public class PlayerMovement : NetworkBehaviour
             lookAction = inputActions.Player.Look;
             Debug.Log("PlayerMovement: Input actions initialized in Awake");
         }
+
+        // Ready State Listener
+        isReady.OnChange += (oldVal, newVal, asServer) =>
+        {
+            Debug.Log($"Player {playerName.Value} ready state changed: {oldVal} -> {newVal}");
+        };
+
+        playerName.OnChange += (oldVal, newVal, asServer) =>
+        {
+            Debug.Log($"Player name changed: {oldVal} -> {newVal}");
+            UpdatePlayerNameInGameManager();
+        };
     }
 
     public override void OnStartClient()
@@ -98,8 +117,13 @@ public class PlayerMovement : NetworkBehaviour
     private void OnTick()
     {
         if (!IsOwner) return;
-        HandleInput();
-        HandleRotation();
+
+        // Nur Bewegung erlauben wenn das Spiel läuft
+        if (NetworkGameManager.Instance != null && NetworkGameManager.Instance.IsGamePlaying())
+        {
+            HandleInput();
+            HandleRotation();
+        }
     }
 
     private void HandleRotation()
@@ -117,24 +141,6 @@ public class PlayerMovement : NetworkBehaviour
     private void RotateServerRpc(float angle)
     {
         transform.rotation = Quaternion.Euler(0, 0, angle);
-    }
-
-    [ServerRpc]
-    public void SetReadyStateServerRpc(string name)
-    {
-        isReady.Value = !isReady.Value;
-
-        if (transform.position.x < 0)
-        {
-            NetworkGameManager.Instance.Player1.Value = name;
-        }
-        else
-        {
-            NetworkGameManager.Instance.Player2.Value = name;
-        }
-
-        NetworkGameManager.Instance.DisableNameField(Owner, isReady.Value);
-        NetworkGameManager.Instance.CheckAndStartGame();
     }
 
     private void HandleInput()
@@ -158,4 +164,83 @@ public class PlayerMovement : NetworkBehaviour
 
         transform.position = new Vector3(newX, newY, transform.position.z);
     }
+
+    #region Ready System
+
+    [ServerRpc]
+    public void SetReadyStateServerRpc(string name)
+    {
+        Debug.Log($"SetReadyStateServerRpc called: Name={name}, CurrentReady={isReady.Value}");
+
+        // Setze Namen wenn noch nicht gesetzt
+        if (string.IsNullOrEmpty(playerName.Value))
+        {
+            playerName.Value = name;
+            myPlayerSlot = DeterminePlayerSlot();
+            Debug.Log($"Player {name} assigned to slot {myPlayerSlot}");
+        }
+
+        // Toggle Ready State
+        isReady.Value = !isReady.Value;
+        Debug.Log($"Player {playerName.Value} ready state is now: {isReady.Value}");
+
+        // Benachrichtige GameManager
+        if (NetworkGameManager.Instance != null)
+        {
+            NetworkGameManager.Instance.CheckAndStartGame();
+        }
+    }
+
+    [Server]
+    private int DeterminePlayerSlot()
+    {
+        // Bestimme Slot basierend auf Spawn-Position oder Reihenfolge
+        var allPlayers = FindObjectsByType<PlayerMovement>(FindObjectsSortMode.None);
+        int slot = 0;
+
+        foreach (var player in allPlayers)
+        {
+            if (player == this) break;
+            if (!string.IsNullOrEmpty(player.PlayerName))
+                slot++;
+        }
+
+        return slot;
+    }
+
+    private void UpdatePlayerNameInGameManager()
+    {
+        if (!IsServerStarted || NetworkGameManager.Instance == null) return;
+
+        if (myPlayerSlot == 0)
+        {
+            NetworkGameManager.Instance.Player1.Value = playerName.Value;
+        }
+        else if (myPlayerSlot == 1)
+        {
+            NetworkGameManager.Instance.Player2.Value = playerName.Value;
+        }
+    }
+
+    #endregion
+
+    #region Helper Methods
+
+    // HELPER: Gibt den Spieler-Slot zurück (0 = Player1, 1 = Player2)
+    public int GetPlayerSlot()
+    {
+        return myPlayerSlot;
+    }
+
+    // OPTIONAL: Wenn du Health auf dem Player tracken willst
+    public int GetHealth()
+    {
+        if (NetworkGameManager.Instance != null)
+        {
+            return NetworkGameManager.Instance.GetPlayerHealth(GetPlayerSlot());
+        }
+        return 100;
+    }
+
+    #endregion
 }
