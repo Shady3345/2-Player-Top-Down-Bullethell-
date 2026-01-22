@@ -18,12 +18,10 @@ public class PlayerShoot : NetworkBehaviour
 
     [Header("Input")]
     private InputSystem_Actions inputActions;
-    private InputAction shootAction;
     private InputAction burstAction;
 
     private float nextFireTime = 0f;
     private float nextBurstTime = 0f;
-    private bool wantsToShoot = false;
     private bool wantsToBurst = false;
     private bool inputInitialized = false;
 
@@ -31,7 +29,6 @@ public class PlayerShoot : NetworkBehaviour
     {
         Debug.Log("PlayerShoot: Awake called");
         inputActions = new InputSystem_Actions();
-        shootAction = inputActions.Player.Attack;
         burstAction = inputActions.Player.Burst;
         Debug.Log("PlayerShoot: Input actions initialized");
     }
@@ -65,27 +62,11 @@ public class PlayerShoot : NetworkBehaviour
 
         inputActions.Enable();
 
-        // Normaler Schuss
-        shootAction.performed += OnShootPerformed;
-        shootAction.canceled += OnShootCanceled;
-
-        // Burst
+        // Nur Burst braucht noch Input
         burstAction.performed += OnBurstPerformed;
 
         inputInitialized = true;
         Debug.Log("PlayerShoot: Input initialized and callbacks registered!");
-    }
-
-    private void OnShootPerformed(InputAction.CallbackContext context)
-    {
-        Debug.Log("PlayerShoot: *** ATTACK PERFORMED! ***");
-        wantsToShoot = true;
-    }
-
-    private void OnShootCanceled(InputAction.CallbackContext context)
-    {
-        Debug.Log("PlayerShoot: Attack canceled");
-        wantsToShoot = false;
     }
 
     private void OnBurstPerformed(InputAction.CallbackContext context)
@@ -101,8 +82,7 @@ public class PlayerShoot : NetworkBehaviour
 
         if (!IsOwner || !inputInitialized) return;
 
-        // Reset shoot flags
-        wantsToShoot = false;
+        // Reset burst flag
         wantsToBurst = false;
 
         // Disable Input Actions
@@ -163,8 +143,6 @@ public class PlayerShoot : NetworkBehaviour
     {
         if (inputInitialized)
         {
-            shootAction.performed -= OnShootPerformed;
-            shootAction.canceled -= OnShootCanceled;
             burstAction.performed -= OnBurstPerformed;
             inputActions?.Disable();
         }
@@ -177,15 +155,14 @@ public class PlayerShoot : NetworkBehaviour
         // Nur schießen erlauben wenn das Spiel läuft
         if (NetworkGameManager.Instance != null && !NetworkGameManager.Instance.IsGamePlaying())
         {
-            wantsToShoot = false;
             wantsToBurst = false;
             return;
         }
 
-        // Normaler Schuss
-        if (wantsToShoot && Time.time >= nextFireTime)
+        // AUTOMATISCHES DAUERFEUER
+        if (Time.time >= nextFireTime)
         {
-            Debug.Log("PlayerShoot: Shooting!");
+            Debug.Log("PlayerShoot: Auto-Shooting!");
             ShootServerRpc();
             nextFireTime = Time.time + fireRate;
         }
