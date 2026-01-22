@@ -54,6 +54,7 @@ public class NetworkGameManager : NetworkBehaviour
 
     [Header("References")]
     public WaveSpawn waveSpawner;
+    public HighscoreManager highscoreManager; // ← NEU: Highscore Manager Referenz
 
     private List<PlayerStats> registeredPlayers = new List<PlayerStats>();
 
@@ -331,6 +332,9 @@ public class NetworkGameManager : NetworkBehaviour
 
         DestroyAllEnemies();
         DestroyAllEnemyBullets(); // ← FIX 1: Destroy enemy bullets
+
+        // ← NEU: Highscore hochladen
+        SubmitHighscore();
     }
 
     [Server]
@@ -465,6 +469,17 @@ public class NetworkGameManager : NetworkBehaviour
             finalWaveText.text = $"Waves Survived: {currentWave.Value}";
         if (gameOverMessageText != null)
             gameOverMessageText.text = "GAME OVER\nBoth Players Defeated!";
+
+        // ← NEU: Lade Highscores nach kurzer Pause
+        Invoke(nameof(LoadHighscores), 0.5f);
+    }
+
+    private void LoadHighscores()
+    {
+        if (highscoreManager != null)
+        {
+            highscoreManager.RefreshHighscores();
+        }
     }
 
     private void ShowPanel(GameObject panelToShow)
@@ -511,6 +526,32 @@ public class NetworkGameManager : NetworkBehaviour
     private void RequestReturnToLobbyServerRpc()
     {
         ReturnToLobby();
+    }
+
+    #endregion
+
+    #region Highscore System
+
+    [Server]
+    private void SubmitHighscore()
+    {
+        if (highscoreManager == null)
+        {
+            Debug.LogWarning("[NetworkGameManager] HighscoreManager not assigned!");
+            return;
+        }
+
+        // Erstelle Team-Namen aus beiden Spielern
+        string player1 = string.IsNullOrEmpty(Player1Name.Value) ? "Player1" : Player1Name.Value;
+        string player2 = string.IsNullOrEmpty(Player2Name.Value) ? "Player2" : Player2Name.Value;
+        string teamName = $"{player1} & {player2}";
+
+        int finalScore = totalScore.Value;
+
+        Debug.Log($"[NetworkGameManager] Submitting Highscore: {teamName} - {finalScore} points");
+
+        // Sende Score an Server (nur vom Server aus)
+        highscoreManager.SubmitScore(teamName, finalScore);
     }
 
     #endregion
