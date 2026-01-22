@@ -104,14 +104,46 @@ public class PlayerMovement : NetworkBehaviour
 
     private void OnDisable()
     {
+        Debug.Log($"PlayerMovement: OnDisable called - IsOwner: {IsOwner}");
+
         if (!IsOwner) return;
 
-        inputActions?.Disable();
+        // Disable Input Actions
+        if (inputActions != null)
+        {
+            inputActions.Disable();
+            Debug.Log("PlayerMovement: Input actions disabled");
+        }
 
+        // Unregister from TimeManager
         if (TimeManager != null)
+        {
             TimeManager.OnTick -= OnTick;
+            Debug.Log("PlayerMovement: OnTick unregistered");
+        }
+    }
 
-        Debug.Log("PlayerMovement: OnDisable - Input disabled and OnTick unregistered");
+    private void OnEnable()
+    {
+        Debug.Log($"PlayerMovement: OnEnable called - IsOwner: {IsOwner}");
+
+        // Nur für Owner und nach der initialen Initialisierung
+        if (!IsOwner || inputActions == null) return;
+
+        // Re-enable Input Actions wenn Komponente aktiviert wird (z.B. nach Respawn)
+        if (inputActions != null)
+        {
+            inputActions.Enable();
+            Debug.Log("PlayerMovement: Input actions re-enabled");
+        }
+
+        // Re-register to TimeManager
+        if (TimeManager != null)
+        {
+            TimeManager.OnTick -= OnTick; // Safety: remove if already registered
+            TimeManager.OnTick += OnTick;
+            Debug.Log("PlayerMovement: OnTick re-registered");
+        }
     }
 
     private void OnTick()

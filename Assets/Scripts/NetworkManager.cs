@@ -54,6 +54,9 @@ public class NetworkGameManager : NetworkBehaviour
     [Header("References")]
     public WaveSpawn waveSpawner;
 
+    // ← NEU: Zentrale Spieler-Registrierung
+    private List<PlayerStats> registeredPlayers = new List<PlayerStats>();
+
     private void Awake()
     {
         Debug.Log("=== NetworkGameManager Awake ===");
@@ -229,12 +232,53 @@ public class NetworkGameManager : NetworkBehaviour
 
     #endregion
 
+    #region Player Registration
+
+    // ← NEU: Zentrale Player-Registrierung
+    [Server]
+    public void RegisterPlayer(PlayerStats player)
+    {
+        if (player == null)
+        {
+            Debug.LogError("[NetworkGameManager] Attempted to register null player!");
+            return;
+        }
+
+        // Prüfe ob Spieler bereits registriert ist
+        if (registeredPlayers.Contains(player))
+        {
+            Debug.LogWarning($"[NetworkGameManager] Player already registered: {player.ObjectId}");
+            return;
+        }
+
+        // Füge Spieler zur Liste hinzu
+        registeredPlayers.Add(player);
+
+        // Vergebe Index basierend auf Position in der Liste
+        int index = registeredPlayers.Count - 1;
+        player.SetPlayerIndex(index);
+
+        Debug.Log($"[NetworkGameManager] Player registered with Index {index}, ObjectId: {player.ObjectId}, Total Players: {registeredPlayers.Count}");
+    }
+
+    [Server]
+    public void UnregisterPlayer(PlayerStats player)
+    {
+        if (registeredPlayers.Contains(player))
+        {
+            registeredPlayers.Remove(player);
+            Debug.Log($"[NetworkGameManager] Player unregistered, Total Players: {registeredPlayers.Count}");
+        }
+    }
+
+    #endregion
+
     #region Health System
 
     [Server]
     public void SetPlayerHealth(int playerIndex, int health)
     {
-        Debug.Log($"SetPlayerHealth called: Player {playerIndex} -> {health} HP");
+        Debug.Log($"[NetworkGameManager] SetPlayerHealth called: Player {playerIndex} -> {health} HP");
 
         if (playerIndex == 0)
         {
@@ -255,14 +299,30 @@ public class NetworkGameManager : NetworkBehaviour
     [Server]
     public void DamagePlayer(int playerIndex, int damage)
     {
-        if (gameState.Value != GameState.Playing) return;
-
-        Debug.Log($"DamagePlayer: Player {playerIndex} takes {damage} damage");
-
-        var playerStats = FindObjectsByType<PlayerStats>(FindObjectsSortMode.None);
-        if (playerIndex >= 0 && playerIndex < playerStats.Length)
+        if (gameState.Value != GameState.Playing)
         {
-            playerStats[playerIndex].TakeDamage(damage);
+            Debug.LogWarning($"[NetworkGameManager] Attempted to damage player during {gameState.Value} state");
+            return;
+        }
+
+        Debug.Log($"[NetworkGameManager] DamagePlayer: Player {playerIndex} takes {damage} damage");
+
+        // ← GEÄNDERT: Nutze registeredPlayers Liste
+        if (playerIndex < 0 || playerIndex >= registeredPlayers.Count)
+        {
+            Debug.LogError($"[NetworkGameManager] Invalid player index: {playerIndex}, Total Players: {registeredPlayers.Count}");
+            return;
+        }
+
+        PlayerStats targetPlayer = registeredPlayers[playerIndex];
+
+        if (targetPlayer != null && targetPlayer.IsAlive())
+        {
+            targetPlayer.TakeDamage(damage);
+        }
+        else
+        {
+            Debug.LogWarning($"[NetworkGameManager] Player {playerIndex} not found or already dead");
         }
     }
 
@@ -271,10 +331,18 @@ public class NetworkGameManager : NetworkBehaviour
     {
         if (gameState.Value != GameState.Playing) return;
 
-        var playerStats = FindObjectsByType<PlayerStats>(FindObjectsSortMode.None);
-        if (playerIndex >= 0 && playerIndex < playerStats.Length)
+        // ← GEÄNDERT: Nutze registeredPlayers Liste
+        if (playerIndex < 0 || playerIndex >= registeredPlayers.Count)
         {
-            playerStats[playerIndex].Heal(healAmount);
+            Debug.LogError($"[NetworkGameManager] Invalid player index: {playerIndex}");
+            return;
+        }
+
+        PlayerStats targetPlayer = registeredPlayers[playerIndex];
+
+        if (targetPlayer != null)
+        {
+            targetPlayer.Heal(healAmount);
         }
     }
 

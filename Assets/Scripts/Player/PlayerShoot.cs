@@ -94,6 +94,60 @@ public class PlayerShoot : NetworkBehaviour
         wantsToBurst = true;
     }
 
+    // WICHTIG: OnDisable zum korrekten Cleanup beim Tod
+    private void OnDisable()
+    {
+        Debug.Log($"PlayerShoot: OnDisable called - IsOwner: {IsOwner}");
+
+        if (!IsOwner || !inputInitialized) return;
+
+        // Reset shoot flags
+        wantsToShoot = false;
+        wantsToBurst = false;
+
+        // Disable Input Actions
+        if (inputActions != null)
+        {
+            inputActions.Disable();
+            Debug.Log("PlayerShoot: Input actions disabled");
+        }
+
+        // Unregister TimeManager
+        if (TimeManager != null)
+        {
+            TimeManager.OnTick -= OnTick;
+            Debug.Log("PlayerShoot: OnTick unregistered");
+        }
+    }
+
+    // WICHTIG: OnEnable zum Reaktivieren nach Respawn
+    private void OnEnable()
+    {
+        Debug.Log($"PlayerShoot: OnEnable called - IsOwner: {IsOwner}");
+
+        // Nur für Owner und nach der initialen Initialisierung
+        if (!IsOwner || !inputInitialized) return;
+
+        // Re-enable Input Actions
+        if (inputActions != null)
+        {
+            inputActions.Enable();
+            Debug.Log("PlayerShoot: Input actions re-enabled");
+        }
+
+        // Re-register TimeManager
+        if (TimeManager != null)
+        {
+            TimeManager.OnTick -= OnTick; // Safety: remove if already registered
+            TimeManager.OnTick += OnTick;
+            Debug.Log("PlayerShoot: OnTick re-registered");
+        }
+
+        // Reset cooldowns (optional - macht Respawn fairer)
+        nextFireTime = 0f;
+        nextBurstTime = 0f;
+    }
+
     public override void OnStopNetwork()
     {
         base.OnStopNetwork();
@@ -119,6 +173,14 @@ public class PlayerShoot : NetworkBehaviour
     private void OnTick()
     {
         if (!IsOwner) return;
+
+        // Nur schießen erlauben wenn das Spiel läuft
+        if (NetworkGameManager.Instance != null && !NetworkGameManager.Instance.IsGamePlaying())
+        {
+            wantsToShoot = false;
+            wantsToBurst = false;
+            return;
+        }
 
         // Normaler Schuss
         if (wantsToShoot && Time.time >= nextFireTime)

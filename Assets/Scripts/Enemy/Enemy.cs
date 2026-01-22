@@ -1,4 +1,4 @@
-using FishNet.Object;
+﻿using FishNet.Object;
 using UnityEngine;
 
 public class Enemy : NetworkBehaviour
@@ -6,7 +6,7 @@ public class Enemy : NetworkBehaviour
     [Header("Enemy Stats")]
     public int health = 3;
     public float moveSpeed = 2f;
-    public int scoreValue = 10; // Punkte beim T�ten
+    public int scoreValue = 10;
 
     [Header("Shooting")]
     public GameObject bulletPrefab;
@@ -21,6 +21,8 @@ public class Enemy : NetworkBehaviour
 
     private Transform targetPlayer;
     private float nextFireTime = 0f;
+    private float retargetInterval = 2f; // ← NEU: Re-target alle 2 Sekunden
+    private float nextRetargetTime = 0f;
 
     public override void OnStartServer()
     {
@@ -30,7 +32,14 @@ public class Enemy : NetworkBehaviour
 
     private void Update()
     {
-        if (!IsServerStarted) return; // Nur auf Server ausf�hren
+        if (!IsServerStarted) return;
+
+        // ← NEU: Periodisches Re-Targeting
+        if (Time.time >= nextRetargetTime)
+        {
+            FindClosestPlayer();
+            nextRetargetTime = Time.time + retargetInterval;
+        }
 
         if (targetPlayer == null)
         {
@@ -47,15 +56,50 @@ public class Enemy : NetworkBehaviour
     {
         GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
         float closestDistance = float.MaxValue;
+        Transform newTarget = null;
 
-        foreach (GameObject player in players)
+        foreach (GameObject playerObj in players)
         {
-            float distance = Vector2.Distance(transform.position, player.transform.position);
+            // ← NEU: Prüfe ob Spieler lebt
+            PlayerStats stats = playerObj.GetComponent<PlayerStats>();
+            if (stats != null && !stats.IsAlive())
+            {
+                continue; // Überspringe tote Spieler
+            }
+
+            float distance = Vector2.Distance(transform.position, playerObj.transform.position);
             if (distance < closestDistance)
             {
                 closestDistance = distance;
-                targetPlayer = player.transform;
+                newTarget = playerObj.transform;
             }
+        }
+
+        // Nur Target ändern wenn neues gefunden wurde
+        if (newTarget != null)
+        {
+            if (targetPlayer != newTarget)
+            {
+                Debug.Log($"[Enemy] Switching target to {newTarget.name}");
+            }
+            targetPlayer = newTarget;
+        }
+        else
+        {
+            // Kein lebender Spieler gefunden
+            targetPlayer = null;
+        }
+    }
+
+    // ← NEU: Wird von PlayerStats aufgerufen wenn Spieler stirbt
+    [Server]
+    public void OnPlayerDied(GameObject deadPlayer)
+    {
+        if (targetPlayer != null && targetPlayer.gameObject == deadPlayer)
+        {
+            Debug.Log($"[Enemy] Current target died, finding new target...");
+            targetPlayer = null;
+            FindClosestPlayer();
         }
     }
 
@@ -82,6 +126,8 @@ public class Enemy : NetworkBehaviour
 
     private void HandleShooting()
     {
+        if (targetPlayer == null) return; // ← NEU: Nicht schießen ohne Ziel
+
         if (Time.time >= nextFireTime)
         {
             Shoot();
@@ -96,7 +142,6 @@ public class Enemy : NetworkBehaviour
         Vector3 spawnPos = firePoint != null ? firePoint.position : transform.position;
         GameObject bullet = Instantiate(bulletPrefab, spawnPos, Quaternion.identity);
 
-        // Spawne Bullet im Netzwerk
         ServerManager.Spawn(bullet);
 
         Vector2 direction = (targetPlayer.position - spawnPos).normalized;
@@ -125,7 +170,6 @@ public class Enemy : NetworkBehaviour
     {
         if (IsServerStarted)
         {
-            // Benachrichtige GameManager �ber Kill
             if (NetworkGameManager.Instance != null)
             {
                 NetworkGameManager.Instance.EnemyKilled(scoreValue);
@@ -146,12 +190,12 @@ public class Enemy : NetworkBehaviour
         }
         else if (other.CompareTag("Player"))
         {
-            // Damage Player on contact
-            PlayerMovement player = other.GetComponent<PlayerMovement>();
-            if (player != null && NetworkGameManager.Instance != null)
+            // ← VERBESSERT: Nutze PlayerStats für korrekten Index
+            PlayerStats stats = other.GetComponent<PlayerStats>();
+            if (stats != null && stats.IsAlive() && NetworkGameManager.Instance != null)
             {
-                // Bestimme Spieler-Index (0 oder 1)
-                int playerIndex = player.transform.position.x < 0 ? 0 : 1;
+                int playerIndex = stats.GetPlayerIndex();
+                Debug.Log($"[Enemy] Collision with Player {playerIndex}");
                 NetworkGameManager.Instance.DamagePlayer(playerIndex, 10);
             }
         }

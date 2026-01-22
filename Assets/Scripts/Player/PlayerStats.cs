@@ -1,11 +1,11 @@
-using FishNet.Object;
+﻿using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using UnityEngine;
 
 public class PlayerStats : NetworkBehaviour
 {
     [Header("Health")]
-    public int maxHealth = 10;
+    public int maxHealth = 100;
     private readonly SyncVar<int> currentHealth = new SyncVar<int>();
 
     [Header("Invincibility")]
@@ -14,10 +14,12 @@ public class PlayerStats : NetworkBehaviour
     private float invincibilityTimer = 0f;
 
     [Header("Respawn")]
-    public Transform[] spawnPoints; // Assign in Inspector
+    public Transform[] spawnPoints;
     public float respawnDelay = 2f;
 
-    private int playerIndex = -1;
+    // ← GEÄNDERT: PlayerIndex ist jetzt ein SyncVar für zuverlässige Synchronisation
+    private readonly SyncVar<int> playerIndex = new SyncVar<int>(new SyncTypeSettings(WritePermission.ServerOnly, ReadPermission.Observers));
+
     private Vector3 initialPosition;
     private Quaternion initialRotation;
 
@@ -25,8 +27,8 @@ public class PlayerStats : NetworkBehaviour
     {
         base.OnStartNetwork();
         currentHealth.OnChange += OnHealthChanged;
+        playerIndex.OnChange += OnPlayerIndexChanged; // ← NEU: Listener für Index-Änderung
 
-        // Speichere initiale Position
         initialPosition = transform.position;
         initialRotation = transform.rotation;
 
@@ -34,54 +36,55 @@ public class PlayerStats : NetworkBehaviour
         {
             currentHealth.Value = maxHealth;
             isInvincible.Value = false;
-        }
 
-        // Bestimme Spieler-Index
-        DeterminePlayerIndex();
+            // ← GEÄNDERT: Registriere beim NetworkGameManager statt selbst zu bestimmen
+            RegisterWithGameManager();
+        }
     }
 
     public override void OnStopNetwork()
     {
         base.OnStopNetwork();
         currentHealth.OnChange -= OnHealthChanged;
+        playerIndex.OnChange -= OnPlayerIndexChanged;
     }
 
-    private void DeterminePlayerIndex()
+    // ← NEU: Registrierung beim GameManager
+    [Server]
+    private void RegisterWithGameManager()
     {
-        // Versuche PlayerMovement zu finden falls vorhanden
-        var movement = GetComponent<PlayerMovement>();
-        if (movement != null)
+        if (NetworkGameManager.Instance != null)
         {
-            var players = FindObjectsByType<PlayerMovement>(FindObjectsSortMode.None);
-            for (int i = 0; i < players.Length; i++)
-            {
-                if (players[i] == movement)
-                {
-                    playerIndex = i;
-                    Debug.Log($"Player Index determined: {playerIndex}");
-                    break;
-                }
-            }
+            NetworkGameManager.Instance.RegisterPlayer(this);
         }
         else
         {
-            // Fallback: Z�hle PlayerStats
-            var players = FindObjectsByType<PlayerStats>(FindObjectsSortMode.None);
-            for (int i = 0; i < players.Length; i++)
-            {
-                if (players[i] == this)
-                {
-                    playerIndex = i;
-                    Debug.Log($"Player Index determined (fallback): {playerIndex}");
-                    break;
-                }
-            }
+            Debug.LogError("[PlayerStats] NetworkGameManager Instance not found!");
         }
+    }
+
+    // ← NEU: Wird vom NetworkGameManager aufgerufen
+    [Server]
+    public void SetPlayerIndex(int index)
+    {
+        playerIndex.Value = index;
+        Debug.Log($"[PlayerStats] Player Index set to: {index}, ObjectId: {ObjectId}");
+
+        // Synchronisiere initial Health mit GameManager
+        if (NetworkGameManager.Instance != null)
+        {
+            NetworkGameManager.Instance.SetPlayerHealth(index, currentHealth.Value);
+        }
+    }
+
+    // ← NEU: Callback wenn Index sich ändert (auch auf Clients)
+    private void OnPlayerIndexChanged(int oldVal, int newVal, bool asServer)
+    {
+        Debug.Log($"[PlayerStats] PlayerIndex changed: {oldVal} -> {newVal} (IsServer: {asServer}, IsClient: {IsClientStarted})");
     }
 
     private void Update()
     {
-        // Invincibility Timer l�uft auf dem Server
         if (IsServerStarted && isInvincible.Value)
         {
             invincibilityTimer -= Time.deltaTime;
@@ -97,9 +100,10 @@ public class PlayerStats : NetworkBehaviour
     {
         if (!IsServerStarted) return;
         if (isInvincible.Value) return;
+        if (currentHealth.Value <= 0) return;
 
-        currentHealth.Value -= damage;
-        Debug.Log($"Player {playerIndex} took damage! Health: {currentHealth.Value}");
+        currentHealth.Value = Mathf.Max(0, currentHealth.Value - damage);
+        Debug.Log($"[PlayerStats] Player {playerIndex.Value} took {damage} damage! Health: {currentHealth.Value}");
 
         if (currentHealth.Value <= 0)
         {
@@ -107,7 +111,6 @@ public class PlayerStats : NetworkBehaviour
         }
         else
         {
-            // Start invincibility auf dem Server
             isInvincible.Value = true;
             invincibilityTimer = invincibilityDuration;
         }
@@ -121,15 +124,13 @@ public class PlayerStats : NetworkBehaviour
 
     private void OnHealthChanged(int prev, int next, bool asServer)
     {
-        Debug.Log($"Player {playerIndex} health changed: {prev} -> {next}");
+        Debug.Log($"[PlayerStats] Player {playerIndex.Value} health changed: {prev} -> {next} (IsServer: {asServer})");
 
-        // Synchronisiere mit NetworkGameManager
-        if (IsServerStarted && playerIndex >= 0 && NetworkGameManager.Instance != null)
+        if (IsServerStarted && playerIndex.Value >= 0 && NetworkGameManager.Instance != null)
         {
-            NetworkGameManager.Instance.SetPlayerHealth(playerIndex, next);
+            NetworkGameManager.Instance.SetPlayerHealth(playerIndex.Value, next);
         }
 
-        // Visual Feedback f�r Clients
         if (IsClientStarted)
         {
             OnHealthChangedClient(prev, next);
@@ -138,57 +139,66 @@ public class PlayerStats : NetworkBehaviour
 
     private void OnHealthChangedClient(int prev, int next)
     {
-        // Hier kannst du visuelle Effekte hinzuf�gen:
-        // - Roten Flash bei Damage
-        // - Screen shake
-        // - Particle effects
-        // - Sound effects
-
         if (next < prev)
         {
-            // Damage genommen
-            Debug.Log("Visual: Player took damage!");
-            // Beispiel: GetComponent<SpriteRenderer>()?.color = Color.red;
+            Debug.Log("[PlayerStats] Visual: Player took damage!");
         }
         else if (next > prev)
         {
-            // Geheilt
-            Debug.Log("Visual: Player healed!");
+            Debug.Log("[PlayerStats] Visual: Player healed!");
         }
     }
 
     private void Die()
     {
         if (!IsServerStarted) return;
-        Debug.Log($"Player {playerIndex} died!");
+        Debug.Log($"[PlayerStats] Player {playerIndex.Value} died!");
 
-        // Setze Health auf 0 im NetworkGameManager
-        if (NetworkGameManager.Instance != null && playerIndex >= 0)
+        if (NetworkGameManager.Instance != null && playerIndex.Value >= 0)
         {
-            NetworkGameManager.Instance.SetPlayerHealth(playerIndex, 0);
+            NetworkGameManager.Instance.SetPlayerHealth(playerIndex.Value, 0);
         }
 
-        // Disable Player statt Despawn (damit er im GameOver Screen bleibt)
         DisablePlayer();
+        NotifyEnemiesOfDeath();
+    }
+
+    [Server]
+    private void NotifyEnemiesOfDeath()
+    {
+        var enemies = FindObjectsByType<Enemy>(FindObjectsSortMode.None);
+        foreach (var enemy in enemies)
+        {
+            if (enemy != null)
+            {
+                enemy.OnPlayerDied(gameObject);
+            }
+        }
     }
 
     [Server]
     private void DisablePlayer()
     {
-        // Disable Movement
+        Debug.Log($"[PlayerStats] Server: DisablePlayer called for Player {playerIndex.Value}");
+
         var movement = GetComponent<PlayerMovement>();
-        if (movement != null)
-            movement.enabled = false;
+        if (movement != null) movement.enabled = false;
 
-        // Disable Collider
+        var shooting = GetComponent<PlayerShoot>();
+        if (shooting != null) shooting.enabled = false;
+
         var collider = GetComponent<Collider2D>();
-        if (collider != null)
-            collider.enabled = false;
+        if (collider != null) collider.enabled = false;
 
-        // Disable Renderer (optional - macht Spieler unsichtbar)
         var renderer = GetComponent<SpriteRenderer>();
-        if (renderer != null)
-            renderer.enabled = false;
+        if (renderer != null) renderer.enabled = false;
+
+        var rb = GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+        }
 
         RpcDisablePlayer();
     }
@@ -196,28 +206,42 @@ public class PlayerStats : NetworkBehaviour
     [ObserversRpc]
     private void RpcDisablePlayer()
     {
-        // Client-side disable effects
+        Debug.Log($"[PlayerStats] Client: RpcDisablePlayer called for Player {playerIndex.Value}");
+
         var movement = GetComponent<PlayerMovement>();
-        if (movement != null)
-            movement.enabled = false;
+        if (movement != null) movement.enabled = false;
+
+        var shooting = GetComponent<PlayerShoot>();
+        if (shooting != null) shooting.enabled = false;
+
+        var collider = GetComponent<Collider2D>();
+        if (collider != null) collider.enabled = false;
+
+        var renderer = GetComponent<SpriteRenderer>();
+        if (renderer != null) renderer.enabled = false;
+
+        var rb = GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+        }
     }
 
     [Server]
     public void Respawn()
     {
-        Debug.Log($"Respawning Player {playerIndex}");
+        Debug.Log($"[PlayerStats] Server: Respawning Player {playerIndex.Value}");
 
-        // Reset Health
         currentHealth.Value = maxHealth;
         isInvincible.Value = false;
 
-        // Bestimme Spawn Position
         Vector3 spawnPosition = initialPosition;
         Quaternion spawnRotation = initialRotation;
 
-        if (spawnPoints != null && spawnPoints.Length > 0 && playerIndex >= 0)
+        if (spawnPoints != null && spawnPoints.Length > 0 && playerIndex.Value >= 0)
         {
-            int spawnIndex = Mathf.Min(playerIndex, spawnPoints.Length - 1);
+            int spawnIndex = Mathf.Min(playerIndex.Value, spawnPoints.Length - 1);
             if (spawnPoints[spawnIndex] != null)
             {
                 spawnPosition = spawnPoints[spawnIndex].position;
@@ -225,24 +249,21 @@ public class PlayerStats : NetworkBehaviour
             }
         }
 
-        // Teleportiere Spieler
         transform.position = spawnPosition;
         transform.rotation = spawnRotation;
 
-        // Enable Player Components
         var movement = GetComponent<PlayerMovement>();
-        if (movement != null)
-            movement.enabled = true;
+        if (movement != null) movement.enabled = true;
+
+        var shooting = GetComponent<PlayerShoot>();
+        if (shooting != null) shooting.enabled = true;
 
         var collider = GetComponent<Collider2D>();
-        if (collider != null)
-            collider.enabled = true;
+        if (collider != null) collider.enabled = true;
 
         var renderer = GetComponent<SpriteRenderer>();
-        if (renderer != null)
-            renderer.enabled = true;
+        if (renderer != null) renderer.enabled = true;
 
-        // Reset Rigidbody velocity
         var rb = GetComponent<Rigidbody2D>();
         if (rb != null)
         {
@@ -256,31 +277,33 @@ public class PlayerStats : NetworkBehaviour
     [ObserversRpc]
     private void RpcRespawn(Vector3 position, Quaternion rotation)
     {
-        // Client-side respawn effects
+        Debug.Log($"[PlayerStats] Client: RpcRespawn called for Player {playerIndex.Value}");
+
         transform.position = position;
         transform.rotation = rotation;
 
         var movement = GetComponent<PlayerMovement>();
-        if (movement != null)
-            movement.enabled = true;
+        if (movement != null) movement.enabled = true;
+
+        var shooting = GetComponent<PlayerShoot>();
+        if (shooting != null) shooting.enabled = true;
+
+        var collider = GetComponent<Collider2D>();
+        if (collider != null) collider.enabled = true;
 
         var renderer = GetComponent<SpriteRenderer>();
-        if (renderer != null)
-            renderer.enabled = true;
+        if (renderer != null) renderer.enabled = true;
 
-        // Reset Rigidbody auf Client
         var rb = GetComponent<Rigidbody2D>();
         if (rb != null)
         {
             rb.linearVelocity = Vector2.zero;
             rb.angularVelocity = 0f;
         }
-
-        Debug.Log($"Client: Player {playerIndex} respawned");
     }
 
     public int GetCurrentHealth() => currentHealth.Value;
-    public int GetPlayerIndex() => playerIndex;
+    public int GetPlayerIndex() => playerIndex.Value;
     public bool IsInvincible() => isInvincible.Value;
     public bool IsAlive() => currentHealth.Value > 0;
 }
