@@ -192,6 +192,13 @@ public class PlayerMovement : NetworkBehaviour
     }
 
     [Server]
+    public void ResetReadyState()
+    {
+        isReady.Value = false;
+        Debug.Log($"Player {playerName.Value} ready state reset");
+    }
+
+    [Server]
     private int DeterminePlayerSlot()
     {
         // Bestimme Slot basierend auf Spawn-Position oder Reihenfolge

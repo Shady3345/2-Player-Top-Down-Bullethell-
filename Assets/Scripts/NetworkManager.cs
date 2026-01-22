@@ -14,6 +14,7 @@ public class NetworkGameManager : NetworkBehaviour
     [Header("Panels")]
     [SerializeField] private GameObject lobbyPanel;
     [SerializeField] private GameObject gamePanel;
+    [SerializeField] private GameObject gameOverPanel;
 
     [Header("Lobby UI")]
     [SerializeField] private TMP_Text stateText;
@@ -27,6 +28,13 @@ public class NetworkGameManager : NetworkBehaviour
     [SerializeField] private TMP_Text scoreText;
     [SerializeField] private TMP_Text healthP1Text;
     [SerializeField] private TMP_Text healthP2Text;
+
+    [Header("GameOver UI")]
+    [SerializeField] private TMP_Text finalScoreText;
+    [SerializeField] private TMP_Text finalWaveText;
+    [SerializeField] private TMP_Text gameOverMessageText;
+    [SerializeField] private Button restartButton;
+    [SerializeField] private Button returnToLobbyButton;
 
     [Header("Player Data")]
     public readonly SyncVar<string> Player1 = new SyncVar<string>();
@@ -82,6 +90,12 @@ public class NetworkGameManager : NetworkBehaviour
             if (player2NameText != null)
                 player2NameText.text = string.IsNullOrEmpty(newVal) ? "Waiting..." : newVal;
         };
+
+        // Button Listeners
+        if (restartButton != null)
+            restartButton.onClick.AddListener(OnRestartButtonClicked);
+        if (returnToLobbyButton != null)
+            returnToLobbyButton.onClick.AddListener(OnReturnToLobbyButtonClicked);
     }
 
     public override void OnStartServer()
@@ -103,9 +117,8 @@ public class NetworkGameManager : NetworkBehaviour
         if (player1NameText != null) player1NameText.text = "Waiting...";
         if (player2NameText != null) player2NameText.text = "Waiting...";
 
-        // Zeige Lobby Panel, verstecke Game Panel
-        if (lobbyPanel != null) lobbyPanel.SetActive(true);
-        if (gamePanel != null) gamePanel.SetActive(false);
+        // Zeige Lobby Panel, verstecke andere Panels
+        ShowPanel(lobbyPanel);
     }
 
     #region Lobby & Ready System
@@ -201,6 +214,9 @@ public class NetworkGameManager : NetworkBehaviour
         healthP1.Value = 100;
         healthP2.Value = 100;
 
+        // Respawn Spieler falls nötig
+        RespawnAllPlayers();
+
         Debug.Log("Wave Spawner will start automatically");
     }
 
@@ -215,7 +231,6 @@ public class NetworkGameManager : NetworkBehaviour
 
     #region Health System
 
-    // Diese Methode wird von PlayerStats aufgerufen um Health zu synchronisieren
     [Server]
     public void SetPlayerHealth(int playerIndex, int health)
     {
@@ -244,7 +259,6 @@ public class NetworkGameManager : NetworkBehaviour
 
         Debug.Log($"DamagePlayer: Player {playerIndex} takes {damage} damage");
 
-        // Finde den entsprechenden PlayerStats und füge Schaden zu
         var playerStats = FindObjectsByType<PlayerStats>(FindObjectsSortMode.None);
         if (playerIndex >= 0 && playerIndex < playerStats.Length)
         {
@@ -257,7 +271,6 @@ public class NetworkGameManager : NetworkBehaviour
     {
         if (gameState.Value != GameState.Playing) return;
 
-        // Finde den entsprechenden PlayerStats und heile
         var playerStats = FindObjectsByType<PlayerStats>(FindObjectsSortMode.None);
         if (playerIndex >= 0 && playerIndex < playerStats.Length)
         {
@@ -324,6 +337,24 @@ public class NetworkGameManager : NetworkBehaviour
         {
             waveSpawner.StopSpawning();
         }
+
+        // Entferne alle verbleibenden Enemies
+        DestroyAllEnemies();
+    }
+
+    [Server]
+    private void DestroyAllEnemies()
+    {
+        // Finde alle Enemies und zerstöre sie
+        var enemies = FindObjectsByType<Enemy>(FindObjectsSortMode.None);
+        foreach (var enemy in enemies)
+        {
+            if (enemy != null)
+            {
+                ServerManager.Despawn(enemy.gameObject);
+            }
+        }
+        Debug.Log($"Destroyed {enemies.Length} remaining enemies");
     }
 
     [Server]
@@ -339,21 +370,68 @@ public class NetworkGameManager : NetworkBehaviour
     }
 
     [Server]
+    private void RestartGame()
+    {
+        Debug.Log("=== RESTARTING GAME ===");
+
+        // Reset alle Stats
+        ResetGame();
+
+        // Setze alle Spieler zurück auf "not ready"
+        var players = FindObjectsByType<PlayerMovement>(FindObjectsSortMode.None);
+        foreach (var player in players)
+        {
+            player.ResetReadyState();
+        }
+
+        // Respawn alle Spieler
+        RespawnAllPlayers();
+
+        // Starte das Spiel direkt neu
+        StartGame();
+    }
+
+    [Server]
     public void ReturnToLobby()
     {
+        Debug.Log("=== RETURNING TO LOBBY ===");
+
         gameState.Value = GameState.WaitingForPlayers;
         ResetGame();
+
+        // Setze alle Spieler zurück auf "not ready"
+        var players = FindObjectsByType<PlayerMovement>(FindObjectsSortMode.None);
+        foreach (var player in players)
+        {
+            player.ResetReadyState();
+        }
+
+        // Respawn alle Spieler für die Lobby
+        RespawnAllPlayers();
+
         RpcReturnToLobby();
+    }
+
+    [Server]
+    private void RespawnAllPlayers()
+    {
+        var players = FindObjectsByType<PlayerStats>(FindObjectsSortMode.None);
+        foreach (var player in players)
+        {
+            if (player != null)
+            {
+                player.Respawn();
+            }
+        }
     }
 
     [ObserversRpc]
     private void RpcReturnToLobby()
     {
+        Debug.Log("RpcReturnToLobby called");
+
         // Zurück zum Lobby Panel
-        if (gamePanel != null)
-            gamePanel.SetActive(false);
-        if (lobbyPanel != null)
-            lobbyPanel.SetActive(true);
+        ShowPanel(lobbyPanel);
 
         // Reset UI
         if (PlayerNameField != null)
@@ -374,30 +452,73 @@ public class NetworkGameManager : NetworkBehaviour
     private void RpcOnGameStart()
     {
         Debug.Log("✓✓✓ Game Started! ✓✓✓");
-
-        // Wechsle von Lobby Panel zu Game Panel
-        if (lobbyPanel != null)
-        {
-            lobbyPanel.SetActive(false);
-            Debug.Log("Lobby Panel deactivated");
-        }
-        if (gamePanel != null)
-        {
-            gamePanel.SetActive(true);
-            Debug.Log("Game Panel activated");
-        }
+        ShowPanel(gamePanel);
     }
 
     [ObserversRpc]
     private void RpcOnGameEnd()
     {
         Debug.Log($"Game Over! Final Score: {totalScore.Value}, Waves Survived: {currentWave.Value}");
+
+        // Zeige GameOver Panel
+        ShowPanel(gameOverPanel);
+
+        // Update GameOver Stats
+        if (finalScoreText != null)
+            finalScoreText.text = $"Final Score: {totalScore.Value}";
+        if (finalWaveText != null)
+            finalWaveText.text = $"Waves Survived: {currentWave.Value}";
+        if (gameOverMessageText != null)
+            gameOverMessageText.text = "GAME OVER\nBoth Players Defeated!";
     }
 
-    private void CallReturnToLobby()
+    private void ShowPanel(GameObject panelToShow)
     {
+        if (lobbyPanel != null)
+            lobbyPanel.SetActive(panelToShow == lobbyPanel);
+        if (gamePanel != null)
+            gamePanel.SetActive(panelToShow == gamePanel);
+        if (gameOverPanel != null)
+            gameOverPanel.SetActive(panelToShow == gameOverPanel);
+    }
+
+    // Button Callbacks
+    private void OnRestartButtonClicked()
+    {
+        Debug.Log("Restart button clicked");
         if (IsServerStarted)
+        {
+            RestartGame();
+        }
+        else
+        {
+            RequestRestartServerRpc();
+        }
+    }
+
+    private void OnReturnToLobbyButtonClicked()
+    {
+        Debug.Log("Return to Lobby button clicked");
+        if (IsServerStarted)
+        {
             ReturnToLobby();
+        }
+        else
+        {
+            RequestReturnToLobbyServerRpc();
+        }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void RequestRestartServerRpc()
+    {
+        RestartGame();
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void RequestReturnToLobbyServerRpc()
+    {
+        ReturnToLobby();
     }
 
     #endregion
