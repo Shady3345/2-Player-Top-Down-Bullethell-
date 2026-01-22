@@ -1,8 +1,8 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
-using TMPro; // Wichtig für TextMeshPro
+using TMPro; // Wichtig fÃ¼r TextMeshPro
 
 public class HighscoreManager : MonoBehaviour
 {
@@ -25,6 +25,10 @@ public class HighscoreManager : MonoBehaviour
     {
         string hash = Md5Sum(name + score + secretKey);
 
+        Debug.Log($"[HighscoreManager] Sending score: {name} - {score}");
+        Debug.Log($"[HighscoreManager] Hash: {hash}");
+        Debug.Log($"[HighscoreManager] URL: {addScoreURL}");
+
         WWWForm form = new WWWForm();
         form.AddField("name", name);
         form.AddField("score", score);
@@ -33,7 +37,18 @@ public class HighscoreManager : MonoBehaviour
         using (UnityWebRequest www = UnityWebRequest.Post(addScoreURL, form))
         {
             yield return www.SendWebRequest();
-            if (www.result == UnityWebRequest.Result.Success) Debug.Log("Server: " + www.downloadHandler.text);
+
+            Debug.Log($"[HighscoreManager] Response Code: {www.responseCode}");
+            Debug.Log($"[HighscoreManager] Server Response: {www.downloadHandler.text}");
+
+            if (www.result == UnityWebRequest.Result.Success)
+            {
+                Debug.Log("âœ“ Score successfully submitted!");
+            }
+            else
+            {
+                Debug.LogError($"âœ— Failed to submit score: {www.error}");
+            }
         }
     }
 
@@ -45,44 +60,78 @@ public class HighscoreManager : MonoBehaviour
 
     private IEnumerator GetScores()
     {
-        // Erstmal alte Einträge in der UI löschen
+        // Erstmal alte EintrÃ¤ge in der UI lÃ¶schen
         foreach (Transform child in scoreContainer) { Destroy(child.gameObject); }
+
+        Debug.Log("Fetching scores from: " + getScoreURL);
 
         using (UnityWebRequest www = UnityWebRequest.Get(getScoreURL))
         {
             yield return www.SendWebRequest();
 
+            Debug.Log("Request Result: " + www.result);
+            Debug.Log("Response Code: " + www.responseCode);
+            Debug.Log("Response Text: " + www.downloadHandler.text);
+
             if (www.result == UnityWebRequest.Result.Success)
             {
-                // JSON parsen
-                HighscoreData data = JsonUtility.FromJson<HighscoreData>(www.downloadHandler.text);
+                string jsonText = www.downloadHandler.text;
 
-                foreach (ScoreEntry entry in data.items)
+                if (string.IsNullOrEmpty(jsonText))
                 {
-                    // Neues Text-Objekt erzeugen
-                    GameObject go = Instantiate(scoreItemPrefab, scoreContainer);
-                    go.GetComponent<TextMeshProUGUI>().text = $"{entry.username}: {entry.score}";
+                    Debug.LogError("Response is empty!");
+                    yield break;
                 }
+
+                try
+                {
+                    HighscoreData data = JsonUtility.FromJson<HighscoreData>(jsonText);
+
+                    if (data == null || data.items == null)
+                    {
+                        Debug.LogError("Failed to parse JSON or items is null");
+                        yield break;
+                    }
+
+                    Debug.Log($"Found {data.items.Length} highscore entries");
+
+                    foreach (ScoreEntry entry in data.items)
+                    {
+                        GameObject go = Instantiate(scoreItemPrefab, scoreContainer);
+                        go.GetComponent<TextMeshProUGUI>().text = $"{entry.username}: {entry.score}";
+                    }
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError("JSON Parse Error: " + e.Message);
+                }
+            }
+            else
+            {
+                Debug.LogError("Web Request Failed: " + www.error);
             }
         }
     }
 
-    // Hilfsfunktion für den Sicherheits-Hash (MD5)
+    // Hilfsfunktion fÃ¼r den Sicherheits-Hash (MD5) - KORRIGIERTE VERSION
     private string Md5Sum(string strToEncrypt)
     {
-        System.Text.UTF8Encoding ue = new System.Text.UTF8Encoding();
-        byte[] bytes = ue.GetBytes(strToEncrypt);
-        System.Security.Cryptography.MD5CryptoServiceProvider md5 = new System.Security.Cryptography.MD5CryptoServiceProvider();
-        byte[] hashBytes = md5.ComputeHash(bytes);
-        string hashString = "";
-        for (int i = 0; i < hashBytes.Length; i++)
+        using (var md5 = System.Security.Cryptography.MD5.Create())
         {
-            hashString += System.Convert.ToString(hashBytes[i], 16).PadLeft(2, '0');
+            byte[] inputBytes = System.Text.Encoding.UTF8.GetBytes(strToEncrypt);
+            byte[] hashBytes = md5.ComputeHash(inputBytes);
+
+            // Konvertiere zu Hex-String (lowercase, wie PHP es macht)
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            for (int i = 0; i < hashBytes.Length; i++)
+            {
+                sb.Append(hashBytes[i].ToString("x2"));
+            }
+            return sb.ToString();
         }
-        return hashString.PadLeft(32, '0');
     }
 }
 
-// Daten-Klassen für JSON (Müssen außerhalb der Hauptklasse stehen)
+// Daten-Klassen fÃ¼r JSON (MÃ¼ssen auÃŸerhalb der Hauptklasse stehen)
 [System.Serializable] public class ScoreEntry { public string username; public int score; }
 [System.Serializable] public class HighscoreData { public ScoreEntry[] items; }
