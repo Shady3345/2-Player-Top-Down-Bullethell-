@@ -15,19 +15,28 @@ public class PlayerStats : NetworkBehaviour
 
     [Header("Respawn")]
     public Transform[] spawnPoints;
-    public float respawnDelay = 2f;
 
-    // ← GEÄNDERT: PlayerIndex ist jetzt ein SyncVar für zuverlässige Synchronisation
+    [Header("Ready System")]
+    private readonly SyncVar<bool> isReady = new SyncVar<bool>(false);
+    private readonly SyncVar<string> playerName = new SyncVar<string>("");
+
     private readonly SyncVar<int> playerIndex = new SyncVar<int>(new SyncTypeSettings(WritePermission.ServerOnly, ReadPermission.Observers));
 
     private Vector3 initialPosition;
     private Quaternion initialRotation;
 
+    // Public Getters
+    public bool IsReady => isReady.Value;
+    public string PlayerName => playerName.Value;
+    public int GetCurrentHealth() => currentHealth.Value;
+    public int GetPlayerIndex() => playerIndex.Value;
+    public bool IsInvincible() => isInvincible.Value;
+    public bool IsAlive() => currentHealth.Value > 0;
+
     public override void OnStartNetwork()
     {
         base.OnStartNetwork();
         currentHealth.OnChange += OnHealthChanged;
-        playerIndex.OnChange += OnPlayerIndexChanged; // ← NEU: Listener für Index-Änderung
 
         initialPosition = transform.position;
         initialRotation = transform.rotation;
@@ -36,8 +45,6 @@ public class PlayerStats : NetworkBehaviour
         {
             currentHealth.Value = maxHealth;
             isInvincible.Value = false;
-
-            // ← GEÄNDERT: Registriere beim NetworkGameManager statt selbst zu bestimmen
             RegisterWithGameManager();
         }
     }
@@ -46,10 +53,13 @@ public class PlayerStats : NetworkBehaviour
     {
         base.OnStopNetwork();
         currentHealth.OnChange -= OnHealthChanged;
-        playerIndex.OnChange -= OnPlayerIndexChanged;
+
+        if (IsServerStarted && NetworkGameManager.Instance != null)
+        {
+            NetworkGameManager.Instance.UnregisterPlayer(this);
+        }
     }
 
-    // ← NEU: Registrierung beim GameManager
     [Server]
     private void RegisterWithGameManager()
     {
@@ -63,24 +73,11 @@ public class PlayerStats : NetworkBehaviour
         }
     }
 
-    // ← NEU: Wird vom NetworkGameManager aufgerufen
     [Server]
     public void SetPlayerIndex(int index)
     {
         playerIndex.Value = index;
-        Debug.Log($"[PlayerStats] Player Index set to: {index}, ObjectId: {ObjectId}");
-
-        // Synchronisiere initial Health mit GameManager
-        if (NetworkGameManager.Instance != null)
-        {
-            NetworkGameManager.Instance.SetPlayerHealth(index, currentHealth.Value);
-        }
-    }
-
-    // ← NEU: Callback wenn Index sich ändert (auch auf Clients)
-    private void OnPlayerIndexChanged(int oldVal, int newVal, bool asServer)
-    {
-        Debug.Log($"[PlayerStats] PlayerIndex changed: {oldVal} -> {newVal} (IsServer: {asServer}, IsClient: {IsClientStarted})");
+        Debug.Log($"[PlayerStats] Player Index set to: {index}");
     }
 
     private void Update()
@@ -103,7 +100,7 @@ public class PlayerStats : NetworkBehaviour
         if (currentHealth.Value <= 0) return;
 
         currentHealth.Value = Mathf.Max(0, currentHealth.Value - damage);
-        Debug.Log($"[PlayerStats] Player {playerIndex.Value} took {damage} damage! Health: {currentHealth.Value}");
+        Debug.Log($"[PlayerStats] Player {playerIndex.Value} took {damage} damage! Health: {currentHealth.Value}/{maxHealth}");
 
         if (currentHealth.Value <= 0)
         {
@@ -126,9 +123,10 @@ public class PlayerStats : NetworkBehaviour
     {
         Debug.Log($"[PlayerStats] Player {playerIndex.Value} health changed: {prev} -> {next} (IsServer: {asServer})");
 
-        if (IsServerStarted && playerIndex.Value >= 0 && NetworkGameManager.Instance != null)
+        // ← NEU: Benachrichtige GameManager über Health-Änderung
+        if (NetworkGameManager.Instance != null && playerIndex.Value >= 0)
         {
-            NetworkGameManager.Instance.SetPlayerHealth(playerIndex.Value, next);
+            NetworkGameManager.Instance.OnPlayerHealthChanged(playerIndex.Value, next);
         }
 
         if (IsClientStarted)
@@ -154,13 +152,13 @@ public class PlayerStats : NetworkBehaviour
         if (!IsServerStarted) return;
         Debug.Log($"[PlayerStats] Player {playerIndex.Value} died!");
 
-        if (NetworkGameManager.Instance != null && playerIndex.Value >= 0)
-        {
-            NetworkGameManager.Instance.SetPlayerHealth(playerIndex.Value, 0);
-        }
-
         DisablePlayer();
         NotifyEnemiesOfDeath();
+
+        if (NetworkGameManager.Instance != null)
+        {
+            NetworkGameManager.Instance.CheckGameOver();
+        }
     }
 
     [Server]
@@ -179,8 +177,6 @@ public class PlayerStats : NetworkBehaviour
     [Server]
     private void DisablePlayer()
     {
-        Debug.Log($"[PlayerStats] Server: DisablePlayer called for Player {playerIndex.Value}");
-
         var movement = GetComponent<PlayerMovement>();
         if (movement != null) movement.enabled = false;
 
@@ -206,8 +202,6 @@ public class PlayerStats : NetworkBehaviour
     [ObserversRpc]
     private void RpcDisablePlayer()
     {
-        Debug.Log($"[PlayerStats] Client: RpcDisablePlayer called for Player {playerIndex.Value}");
-
         var movement = GetComponent<PlayerMovement>();
         if (movement != null) movement.enabled = false;
 
@@ -231,7 +225,7 @@ public class PlayerStats : NetworkBehaviour
     [Server]
     public void Respawn()
     {
-        Debug.Log($"[PlayerStats] Server: Respawning Player {playerIndex.Value}");
+        Debug.Log($"[PlayerStats] Respawning Player {playerIndex.Value}");
 
         currentHealth.Value = maxHealth;
         isInvincible.Value = false;
@@ -252,6 +246,13 @@ public class PlayerStats : NetworkBehaviour
         transform.position = spawnPosition;
         transform.rotation = spawnRotation;
 
+        EnablePlayer();
+        RpcRespawn(spawnPosition, spawnRotation);
+    }
+
+    [Server]
+    private void EnablePlayer()
+    {
         var movement = GetComponent<PlayerMovement>();
         if (movement != null) movement.enabled = true;
 
@@ -270,15 +271,11 @@ public class PlayerStats : NetworkBehaviour
             rb.linearVelocity = Vector2.zero;
             rb.angularVelocity = 0f;
         }
-
-        RpcRespawn(spawnPosition, spawnRotation);
     }
 
     [ObserversRpc]
     private void RpcRespawn(Vector3 position, Quaternion rotation)
     {
-        Debug.Log($"[PlayerStats] Client: RpcRespawn called for Player {playerIndex.Value}");
-
         transform.position = position;
         transform.rotation = rotation;
 
@@ -302,8 +299,34 @@ public class PlayerStats : NetworkBehaviour
         }
     }
 
-    public int GetCurrentHealth() => currentHealth.Value;
-    public int GetPlayerIndex() => playerIndex.Value;
-    public bool IsInvincible() => isInvincible.Value;
-    public bool IsAlive() => currentHealth.Value > 0;
+    #region Ready System
+
+    [ServerRpc]
+    public void SetReadyServerRpc(string name)
+    {
+        if (string.IsNullOrEmpty(playerName.Value))
+        {
+            playerName.Value = name;
+
+            if (NetworkGameManager.Instance != null && playerIndex.Value >= 0)
+            {
+                NetworkGameManager.Instance.SetPlayerName(playerIndex.Value, name);
+            }
+        }
+
+        isReady.Value = !isReady.Value;
+
+        if (NetworkGameManager.Instance != null)
+        {
+            NetworkGameManager.Instance.CheckAndStartGame();
+        }
+    }
+
+    [Server]
+    public void ResetReady()
+    {
+        isReady.Value = false;
+    }
+
+    #endregion
 }

@@ -19,9 +19,9 @@ public class Enemy : NetworkBehaviour
     public bool moveTowardsPlayer = false;
     public float stopDistance = 5f;
 
-    private Transform targetPlayer;
+    private PlayerStats targetPlayer;
     private float nextFireTime = 0f;
-    private float retargetInterval = 2f; // ← NEU: Re-target alle 2 Sekunden
+    private float retargetInterval = 2f;
     private float nextRetargetTime = 0f;
 
     public override void OnStartServer()
@@ -34,16 +34,17 @@ public class Enemy : NetworkBehaviour
     {
         if (!IsServerStarted) return;
 
-        // ← NEU: Periodisches Re-Targeting
+        // Periodisches Re-Targeting
         if (Time.time >= nextRetargetTime)
         {
             FindClosestPlayer();
             nextRetargetTime = Time.time + retargetInterval;
         }
 
-        if (targetPlayer == null)
+        // Früher Exit wenn kein Ziel
+        if (targetPlayer == null || !targetPlayer.IsAlive())
         {
-            FindClosestPlayer();
+            targetPlayer = null;
             return;
         }
 
@@ -52,46 +53,45 @@ public class Enemy : NetworkBehaviour
         HandleShooting();
     }
 
+    // ← VERBESSERT: Nutze GameManager statt FindGameObjectsWithTag
     private void FindClosestPlayer()
     {
-        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
-        float closestDistance = float.MaxValue;
-        Transform newTarget = null;
-
-        foreach (GameObject playerObj in players)
+        if (NetworkGameManager.Instance == null)
         {
-            // ← NEU: Prüfe ob Spieler lebt
-            PlayerStats stats = playerObj.GetComponent<PlayerStats>();
-            if (stats != null && !stats.IsAlive())
-            {
-                continue; // Überspringe tote Spieler
-            }
+            targetPlayer = null;
+            return;
+        }
 
-            float distance = Vector2.Distance(transform.position, playerObj.transform.position);
+        // ← NEU: Hole alle registrierten Spieler vom GameManager
+        var allPlayers = FindObjectsByType<PlayerStats>(FindObjectsSortMode.None);
+
+        float closestDistance = float.MaxValue;
+        PlayerStats newTarget = null;
+
+        foreach (var player in allPlayers)
+        {
+            // Überspringe tote Spieler
+            if (player == null || !player.IsAlive())
+                continue;
+
+            float distance = Vector2.Distance(transform.position, player.transform.position);
             if (distance < closestDistance)
             {
                 closestDistance = distance;
-                newTarget = playerObj.transform;
+                newTarget = player;
             }
         }
 
-        // Nur Target ändern wenn neues gefunden wurde
-        if (newTarget != null)
+        // Target nur ändern wenn neues gefunden wurde
+        if (newTarget != null && targetPlayer != newTarget)
         {
-            if (targetPlayer != newTarget)
-            {
-                Debug.Log($"[Enemy] Switching target to {newTarget.name}");
-            }
-            targetPlayer = newTarget;
+            Debug.Log($"[Enemy] Switching target to Player {newTarget.GetPlayerIndex()}");
         }
-        else
-        {
-            // Kein lebender Spieler gefunden
-            targetPlayer = null;
-        }
+
+        targetPlayer = newTarget;
     }
 
-    // ← NEU: Wird von PlayerStats aufgerufen wenn Spieler stirbt
+    // Wird von PlayerStats aufgerufen wenn Spieler stirbt
     [Server]
     public void OnPlayerDied(GameObject deadPlayer)
     {
@@ -107,11 +107,14 @@ public class Enemy : NetworkBehaviour
     {
         if (!moveTowardsPlayer || targetPlayer == null) return;
 
-        float distanceToPlayer = Vector2.Distance(transform.position, targetPlayer.position);
+        float distanceToPlayer = Vector2.Distance(transform.position, targetPlayer.transform.position);
         if (distanceToPlayer > stopDistance)
         {
-            Vector2 direction = (targetPlayer.position - transform.position).normalized;
-            transform.position = Vector2.MoveTowards(transform.position, targetPlayer.position, moveSpeed * Time.deltaTime);
+            transform.position = Vector2.MoveTowards(
+                transform.position,
+                targetPlayer.transform.position,
+                moveSpeed * Time.deltaTime
+            );
         }
     }
 
@@ -119,14 +122,14 @@ public class Enemy : NetworkBehaviour
     {
         if (!trackPlayer || targetPlayer == null) return;
 
-        Vector2 direction = targetPlayer.position - transform.position;
+        Vector2 direction = targetPlayer.transform.position - transform.position;
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90f;
         transform.rotation = Quaternion.Euler(0, 0, angle);
     }
 
     private void HandleShooting()
     {
-        if (targetPlayer == null) return; // ← NEU: Nicht schießen ohne Ziel
+        if (targetPlayer == null) return;
 
         if (Time.time >= nextFireTime)
         {
@@ -144,7 +147,7 @@ public class Enemy : NetworkBehaviour
 
         ServerManager.Spawn(bullet);
 
-        Vector2 direction = (targetPlayer.position - spawnPos).normalized;
+        Vector2 direction = (targetPlayer.transform.position - spawnPos).normalized;
         Rigidbody2D rb = bullet.GetComponent<Rigidbody2D>();
         if (rb != null)
         {
@@ -190,13 +193,15 @@ public class Enemy : NetworkBehaviour
         }
         else if (other.CompareTag("Player"))
         {
-            // ← VERBESSERT: Nutze PlayerStats für korrekten Index
             PlayerStats stats = other.GetComponent<PlayerStats>();
-            if (stats != null && stats.IsAlive() && NetworkGameManager.Instance != null)
+            if (stats != null && stats.IsAlive())
             {
                 int playerIndex = stats.GetPlayerIndex();
-                Debug.Log($"[Enemy] Collision with Player {playerIndex}");
-                NetworkGameManager.Instance.DamagePlayer(playerIndex, 10);
+
+                if (NetworkGameManager.Instance != null)
+                {
+                    NetworkGameManager.Instance.DamagePlayer(playerIndex, 10);
+                }
             }
         }
     }

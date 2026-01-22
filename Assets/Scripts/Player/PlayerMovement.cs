@@ -1,6 +1,4 @@
-using FishNet.Connection;
-using FishNet.Object;
-using FishNet.Object.Synchronizing;
+ï»¿using FishNet.Object;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -16,64 +14,26 @@ public class PlayerMovement : NetworkBehaviour
 
     [Header("Input System")]
     private InputSystem_Actions inputActions;
-
     private InputAction moveAction;
     private InputAction lookAction;
 
-    // Ready System
-    private readonly SyncVar<bool> isReady = new SyncVar<bool>(false);
-    private readonly SyncVar<string> playerName = new SyncVar<string>("");
-    public bool IsReady => isReady.Value;
-    public string PlayerName => playerName.Value;
-
-    // Spieler-Identifikation
-    private int myPlayerSlot = -1;
-
     private void Awake()
     {
-        Debug.Log($"PlayerMovement: Awake called");
-
         if (inputActions == null)
         {
             inputActions = new InputSystem_Actions();
             moveAction = inputActions.Player.Move;
             lookAction = inputActions.Player.Look;
-            Debug.Log("PlayerMovement: Input actions initialized in Awake");
         }
-
-        // Ready State Listener
-        isReady.OnChange += (oldVal, newVal, asServer) =>
-        {
-            Debug.Log($"Player {playerName.Value} ready state changed: {oldVal} -> {newVal}");
-        };
-
-        playerName.OnChange += (oldVal, newVal, asServer) =>
-        {
-            Debug.Log($"Player name changed: {oldVal} -> {newVal}");
-            UpdatePlayerNameInGameManager();
-        };
     }
 
     public override void OnStartClient()
     {
         base.OnStartClient();
-
-        Debug.Log($"PlayerMovement: OnStartClient START - IsOwner: {IsOwner}, ObjectId: {ObjectId}");
-
         spriteRenderer = GetComponent<SpriteRenderer>();
 
-        if (spriteRenderer == null)
-        {
-            Debug.LogError($"PlayerMovement: SpriteRenderer NOT FOUND! IsOwner: {IsOwner}, GameObject: {gameObject.name}");
-            return;
-        }
-
-        Debug.Log($"PlayerMovement: SpriteRenderer found!");
-
-        // Initialisiere Input hier für Owner
         if (IsOwner)
         {
-            Debug.Log("PlayerMovement: Owner detected, initializing input");
             InitializeOwnerInput();
         }
     }
@@ -83,66 +43,43 @@ public class PlayerMovement : NetworkBehaviour
         if (inputActions != null)
         {
             inputActions.Enable();
-            Debug.Log("PlayerMovement: Input actions enabled");
-        }
-        else
-        {
-            Debug.LogError("PlayerMovement: inputActions is null in InitializeOwnerInput!");
         }
 
         if (TimeManager != null)
         {
-            TimeManager.OnTick -= OnTick; // Sicherheit: entferne falls schon registriert
+            TimeManager.OnTick -= OnTick;
             TimeManager.OnTick += OnTick;
-            Debug.Log("PlayerMovement: OnTick registered to TimeManager");
-        }
-        else
-        {
-            Debug.LogError("PlayerMovement: TimeManager is null!");
         }
     }
 
     private void OnDisable()
     {
-        Debug.Log($"PlayerMovement: OnDisable called - IsOwner: {IsOwner}");
-
         if (!IsOwner) return;
 
-        // Disable Input Actions
         if (inputActions != null)
         {
             inputActions.Disable();
-            Debug.Log("PlayerMovement: Input actions disabled");
         }
 
-        // Unregister from TimeManager
         if (TimeManager != null)
         {
             TimeManager.OnTick -= OnTick;
-            Debug.Log("PlayerMovement: OnTick unregistered");
         }
     }
 
     private void OnEnable()
     {
-        Debug.Log($"PlayerMovement: OnEnable called - IsOwner: {IsOwner}");
-
-        // Nur für Owner und nach der initialen Initialisierung
         if (!IsOwner || inputActions == null) return;
 
-        // Re-enable Input Actions wenn Komponente aktiviert wird (z.B. nach Respawn)
         if (inputActions != null)
         {
             inputActions.Enable();
-            Debug.Log("PlayerMovement: Input actions re-enabled");
         }
 
-        // Re-register to TimeManager
         if (TimeManager != null)
         {
-            TimeManager.OnTick -= OnTick; // Safety: remove if already registered
+            TimeManager.OnTick -= OnTick;
             TimeManager.OnTick += OnTick;
-            Debug.Log("PlayerMovement: OnTick re-registered");
         }
     }
 
@@ -150,7 +87,7 @@ public class PlayerMovement : NetworkBehaviour
     {
         if (!IsOwner) return;
 
-        // Nur Bewegung erlauben wenn das Spiel läuft
+        // Nur Bewegung erlauben wenn das Spiel lÃ¤uft
         if (NetworkGameManager.Instance != null && NetworkGameManager.Instance.IsGamePlaying())
         {
             HandleInput();
@@ -196,90 +133,4 @@ public class PlayerMovement : NetworkBehaviour
 
         transform.position = new Vector3(newX, newY, transform.position.z);
     }
-
-    #region Ready System
-
-    [ServerRpc]
-    public void SetReadyStateServerRpc(string name)
-    {
-        Debug.Log($"SetReadyStateServerRpc called: Name={name}, CurrentReady={isReady.Value}");
-
-        // Setze Namen wenn noch nicht gesetzt
-        if (string.IsNullOrEmpty(playerName.Value))
-        {
-            playerName.Value = name;
-            myPlayerSlot = DeterminePlayerSlot();
-            Debug.Log($"Player {name} assigned to slot {myPlayerSlot}");
-        }
-
-        // Toggle Ready State
-        isReady.Value = !isReady.Value;
-        Debug.Log($"Player {playerName.Value} ready state is now: {isReady.Value}");
-
-        // Benachrichtige GameManager
-        if (NetworkGameManager.Instance != null)
-        {
-            NetworkGameManager.Instance.CheckAndStartGame();
-        }
-    }
-
-    [Server]
-    public void ResetReadyState()
-    {
-        isReady.Value = false;
-        Debug.Log($"Player {playerName.Value} ready state reset");
-    }
-
-    [Server]
-    private int DeterminePlayerSlot()
-    {
-        // Bestimme Slot basierend auf Spawn-Position oder Reihenfolge
-        var allPlayers = FindObjectsByType<PlayerMovement>(FindObjectsSortMode.None);
-        int slot = 0;
-
-        foreach (var player in allPlayers)
-        {
-            if (player == this) break;
-            if (!string.IsNullOrEmpty(player.PlayerName))
-                slot++;
-        }
-
-        return slot;
-    }
-
-    private void UpdatePlayerNameInGameManager()
-    {
-        if (!IsServerStarted || NetworkGameManager.Instance == null) return;
-
-        if (myPlayerSlot == 0)
-        {
-            NetworkGameManager.Instance.Player1.Value = playerName.Value;
-        }
-        else if (myPlayerSlot == 1)
-        {
-            NetworkGameManager.Instance.Player2.Value = playerName.Value;
-        }
-    }
-
-    #endregion
-
-    #region Helper Methods
-
-    // HELPER: Gibt den Spieler-Slot zurück (0 = Player1, 1 = Player2)
-    public int GetPlayerSlot()
-    {
-        return myPlayerSlot;
-    }
-
-    // OPTIONAL: Wenn du Health auf dem Player tracken willst
-    public int GetHealth()
-    {
-        if (NetworkGameManager.Instance != null)
-        {
-            return NetworkGameManager.Instance.GetPlayerHealth(GetPlayerSlot());
-        }
-        return 100;
-    }
-
-    #endregion
 }

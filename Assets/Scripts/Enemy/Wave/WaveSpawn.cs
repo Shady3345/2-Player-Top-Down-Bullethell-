@@ -1,4 +1,4 @@
-using FishNet.Object;
+Ôªøusing FishNet.Object;
 using FishNet.Object.Synchronizing;
 using UnityEngine;
 using System.Collections;
@@ -11,8 +11,8 @@ public class WaveSpawn : NetworkBehaviour
     {
         public GameObject enemyPrefab;
         public string enemyName;
-        public int spawnWeight = 1; // Hˆherer Wert = h‰ufigeres Spawnen
-        public int scoreValue = 10; // Punkte beim Tˆten
+        public int spawnWeight = 1;
+        public int scoreValue = 10;
     }
 
     [Header("Enemy Types")]
@@ -38,12 +38,10 @@ public class WaveSpawn : NetworkBehaviour
     public override void OnStartServer()
     {
         base.OnStartServer();
-        // Warte auf Spielstart durch GameManager
     }
 
     private void Update()
     {
-        // Starte Wave-System nur wenn Spiel l‰uft
         if (IsServerStarted && !isSpawning && NetworkGameManager.Instance != null)
         {
             if (NetworkGameManager.Instance.IsGamePlaying())
@@ -56,14 +54,13 @@ public class WaveSpawn : NetworkBehaviour
 
     private IEnumerator WaveCoroutine()
     {
-        yield return new WaitForSeconds(2f); // Kurze Pause vor erster Wave
+        yield return new WaitForSeconds(2f);
 
         while (NetworkGameManager.Instance != null && NetworkGameManager.Instance.IsGamePlaying())
         {
             currentWave.Value++;
             waveInProgress.Value = true;
 
-            // Update GameManager
             NetworkGameManager.Instance.SetCurrentWave(currentWave.Value);
 
             RpcAnnounceWave(currentWave.Value);
@@ -72,10 +69,8 @@ public class WaveSpawn : NetworkBehaviour
 
             yield return StartCoroutine(SpawnWave(enemiesToSpawn));
 
-            // Warte bis alle Gegner besiegt sind
             while (enemiesAlive.Value > 0)
             {
-                // Entferne zerstˆrte Gegner aus der Liste
                 spawnedEnemies.RemoveAll(enemy => enemy == null);
                 enemiesAlive.Value = spawnedEnemies.Count;
 
@@ -85,7 +80,6 @@ public class WaveSpawn : NetworkBehaviour
             waveInProgress.Value = false;
             RpcAnnounceWaveComplete(currentWave.Value);
 
-            // Pause zwischen Waves 
             yield return new WaitForSeconds(timeBetweenWaves);
         }
 
@@ -105,24 +99,19 @@ public class WaveSpawn : NetworkBehaviour
     {
         if (enemyTypes.Length == 0 || spawnPoints.Length == 0) return;
 
-        // W‰hle zuf‰lligen Spawn-Punkt
         Transform spawnPoint = spawnPoints[Random.Range(0, spawnPoints.Length)];
         Vector3 spawnPosition = spawnPoint.position + (Vector3)Random.insideUnitCircle * spawnRadius;
 
-        // W‰hle Gegnertyp basierend auf Gewichtung
         EnemyType selectedType = GetRandomEnemyType();
 
         if (selectedType?.enemyPrefab == null) return;
 
-        // Spawne Gegner
         GameObject enemy = Instantiate(selectedType.enemyPrefab, spawnPosition, Quaternion.identity);
         ServerManager.Spawn(enemy);
 
-        // F¸ge Score-Tracking hinzu
         Enemy enemyScript = enemy.GetComponent<Enemy>();
         if (enemyScript != null)
         {
-            // Speichere Score-Wert im Enemy (erweitere Enemy.cs wenn nˆtig)
             enemyScript.scoreValue = selectedType.scoreValue;
         }
 
@@ -132,14 +121,12 @@ public class WaveSpawn : NetworkBehaviour
 
     private EnemyType GetRandomEnemyType()
     {
-        // Berechne Gesamtgewicht
         int totalWeight = 0;
         foreach (var type in enemyTypes)
         {
             totalWeight += type.spawnWeight;
         }
 
-        // W‰hle zuf‰llig basierend auf Gewichtung
         int randomValue = Random.Range(0, totalWeight);
         int currentWeight = 0;
 
@@ -152,24 +139,21 @@ public class WaveSpawn : NetworkBehaviour
             }
         }
 
-        return enemyTypes[0]; // Fallback
+        return enemyTypes[0];
     }
 
     [ObserversRpc]
     private void RpcAnnounceWave(int wave)
     {
         Debug.Log($"Wave {wave} startet!");
-        // Hier kannst du UI-Updates machen
     }
 
     [ObserversRpc]
     private void RpcAnnounceWaveComplete(int wave)
     {
         Debug.Log($"Wave {wave} abgeschlossen!");
-        // Hier kannst du UI-Updates machen
     }
 
-    // ÷ffentliche Methoden f¸r GameManager
     public int GetCurrentWave() => currentWave.Value;
     public int GetEnemiesAlive() => enemiesAlive.Value;
     public bool IsWaveInProgress() => waveInProgress.Value;
@@ -179,5 +163,19 @@ public class WaveSpawn : NetworkBehaviour
     {
         StopAllCoroutines();
         isSpawning = false;
+    }
+
+    // ‚Üê FIX 2: Neue Methode zum Zur√ºcksetzen der Waves
+    [Server]
+    public void ResetWaves()
+    {
+        StopAllCoroutines();
+        isSpawning = false;
+        currentWave.Value = 0;
+        enemiesAlive.Value = 0;
+        waveInProgress.Value = false;
+        spawnedEnemies.Clear();
+
+        Debug.Log("[WaveSpawn] Waves reset to 0");
     }
 }

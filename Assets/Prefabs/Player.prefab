@@ -129,7 +129,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584326084864495783
+  _initializedTimestamp: -8584325208618534883
   NetworkObserver: {fileID: 0}
   _enablePrediction: 0
   _predictionType: 0
@@ -271,8 +271,9 @@ MonoBehaviour:
   _componentIndexCache: 4
   _addedNetworkObject: {fileID: 4855654981952942140}
   _networkObjectCache: {fileID: 4855654981952942140}
-  maxHealth: 10
+  maxHealth: 5
   invincibilityDuration: 1
+  spawnPoints: []
 --- !u!58 &3102610136521059556
 CircleCollider2D:
   m_ObjectHideFlags: 0

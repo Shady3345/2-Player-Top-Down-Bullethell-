@@ -37,15 +37,16 @@ public class NetworkGameManager : NetworkBehaviour
     [SerializeField] private Button returnToLobbyButton;
 
     [Header("Player Data")]
-    public readonly SyncVar<string> Player1 = new SyncVar<string>();
-    public readonly SyncVar<string> Player2 = new SyncVar<string>();
-    private readonly SyncVar<int> healthP1 = new SyncVar<int>(100);
-    private readonly SyncVar<int> healthP2 = new SyncVar<int>(100);
+    public readonly SyncVar<string> Player1Name = new SyncVar<string>();
+    public readonly SyncVar<string> Player2Name = new SyncVar<string>();
 
     [Header("Game Stats")]
     private readonly SyncVar<int> totalScore = new SyncVar<int>();
     private readonly SyncVar<int> currentWave = new SyncVar<int>();
     private readonly SyncVar<int> enemiesKilled = new SyncVar<int>();
+
+    private readonly SyncVar<int> player1Health = new SyncVar<int>(100);
+    private readonly SyncVar<int> player2Health = new SyncVar<int>(100);
 
     [Header("Game State")]
     private readonly SyncVar<GameState> gameState = new SyncVar<GameState>();
@@ -54,47 +55,38 @@ public class NetworkGameManager : NetworkBehaviour
     [Header("References")]
     public WaveSpawn waveSpawner;
 
-    // ← NEU: Zentrale Spieler-Registrierung
     private List<PlayerStats> registeredPlayers = new List<PlayerStats>();
 
     private void Awake()
     {
-        Debug.Log("=== NetworkGameManager Awake ===");
-
         if (Instance == null)
         {
             Instance = this;
-            Debug.Log("NetworkGameManager Instance set");
         }
         else
         {
-            Debug.LogWarning("Duplicate NetworkGameManager found! Destroying...");
             Destroy(gameObject);
             return;
         }
 
-        // Event-Listener für SyncVars
         gameState.OnChange += OnStateChanged;
         totalScore.OnChange += (oldVal, newVal, asServer) => UpdateGameUI();
         currentWave.OnChange += (oldVal, newVal, asServer) => UpdateGameUI();
         enemiesKilled.OnChange += (oldVal, newVal, asServer) => UpdateGameUI();
-        healthP1.OnChange += (oldVal, newVal, asServer) => UpdateGameUI();
-        healthP2.OnChange += (oldVal, newVal, asServer) => UpdateGameUI();
+        player1Health.OnChange += (oldVal, newVal, asServer) => UpdateGameUI();
+        player2Health.OnChange += (oldVal, newVal, asServer) => UpdateGameUI();
 
-        Player1.OnChange += (oldVal, newVal, asServer) =>
+        Player1Name.OnChange += (oldVal, newVal, asServer) =>
         {
-            Debug.Log($"Player1 name changed: {oldVal} -> {newVal}");
             if (player1NameText != null)
                 player1NameText.text = string.IsNullOrEmpty(newVal) ? "Waiting..." : newVal;
         };
-        Player2.OnChange += (oldVal, newVal, asServer) =>
+        Player2Name.OnChange += (oldVal, newVal, asServer) =>
         {
-            Debug.Log($"Player2 name changed: {oldVal} -> {newVal}");
             if (player2NameText != null)
                 player2NameText.text = string.IsNullOrEmpty(newVal) ? "Waiting..." : newVal;
         };
 
-        // Button Listeners
         if (restartButton != null)
             restartButton.onClick.AddListener(OnRestartButtonClicked);
         if (returnToLobbyButton != null)
@@ -104,7 +96,6 @@ public class NetworkGameManager : NetworkBehaviour
     public override void OnStartServer()
     {
         base.OnStartServer();
-        Debug.Log("=== NetworkGameManager OnStartServer ===");
         gameState.Value = GameState.WaitingForPlayers;
         ResetGame();
     }
@@ -112,15 +103,12 @@ public class NetworkGameManager : NetworkBehaviour
     public override void OnStartClient()
     {
         base.OnStartClient();
-        Debug.Log($"=== NetworkGameManager OnStartClient === IsServer: {IsServerInitialized}, IsClient: {IsClientInitialized}");
         UpdateStateText();
         UpdateGameUI();
 
-        // Setze initiale Texte
         if (player1NameText != null) player1NameText.text = "Waiting...";
         if (player2NameText != null) player2NameText.text = "Waiting...";
 
-        // Zeige Lobby Panel, verstecke andere Panels
         ShowPanel(lobbyPanel);
     }
 
@@ -128,30 +116,15 @@ public class NetworkGameManager : NetworkBehaviour
 
     public void SetPlayerReady()
     {
-        Debug.Log("=== SetPlayerReady called ===");
-
-        if (PlayerNameField == null)
-        {
-            Debug.LogError("PlayerNameField is NULL!");
-            return;
-        }
+        if (PlayerNameField == null) return;
 
         string playerName = PlayerNameField.text.Trim();
+        if (string.IsNullOrEmpty(playerName)) return;
 
-        if (string.IsNullOrEmpty(playerName))
-        {
-            Debug.LogWarning("Please enter a name!");
-            return;
-        }
-
-        // Finde den lokalen Spieler
-        foreach (var player in FindObjectsByType<PlayerMovement>(FindObjectsSortMode.None))
+        foreach (var player in FindObjectsByType<PlayerStats>(FindObjectsSortMode.None))
         {
             if (player.IsOwner)
             {
-                Debug.Log($"Found local player, setting ready with name: {playerName}");
-
-                // Toggle Ready State visuell
                 if (ReadyButton != null)
                 {
                     bool isCurrentlyReady = ReadyButton.GetComponent<Image>()?.color == Color.green;
@@ -166,10 +139,8 @@ public class NetworkGameManager : NetworkBehaviour
                         text.text = newReadyState ? "READY!" : "Ready?";
                 }
 
-                // Sende Ready-State an Server
-                player.SetReadyStateServerRpc(playerName);
+                player.SetReadyServerRpc(playerName);
 
-                // Deaktiviere Name Field nach erster Eingabe
                 if (PlayerNameField.interactable)
                 {
                     PlayerNameField.interactable = false;
@@ -183,26 +154,13 @@ public class NetworkGameManager : NetworkBehaviour
     [Server]
     public void CheckAndStartGame()
     {
-        Debug.Log("=== CheckAndStartGame ===");
-
         if (CurrentState != GameState.WaitingForPlayers) return;
 
-        var players = FindObjectsByType<PlayerMovement>(FindObjectsSortMode.None);
+        var players = FindObjectsByType<PlayerStats>(FindObjectsSortMode.None);
 
-        // Zähle ready players
-        int readyCount = 0;
-        foreach (var player in players)
-        {
-            if (player.IsReady)
-                readyCount++;
-        }
-
-        Debug.Log($"Players: {players.Length}, Ready: {readyCount}");
-
-        // Starte Spiel wenn mindestens 2 Spieler bereit sind
         if (players.Length >= 2 && players.All(p => p.IsReady))
         {
-            Debug.Log("✓✓✓ Both players ready - Starting game! ✓✓✓");
+            Debug.Log("✓ Both players ready - Starting game!");
             StartGame();
         }
     }
@@ -210,55 +168,24 @@ public class NetworkGameManager : NetworkBehaviour
     [Server]
     private void StartGame()
     {
-        Debug.Log("=== GAME STARTING ===");
         gameState.Value = GameState.Playing;
-
-        // Initialisiere Spieler-Health
-        healthP1.Value = 100;
-        healthP2.Value = 100;
-
-        // Respawn Spieler falls nötig
         RespawnAllPlayers();
-
-        Debug.Log("Wave Spawner will start automatically");
-    }
-
-    [TargetRpc]
-    public void DisableNameField(NetworkConnection con, bool isOff)
-    {
-        if (PlayerNameField != null)
-            PlayerNameField.gameObject.SetActive(!isOff);
     }
 
     #endregion
 
     #region Player Registration
 
-    // ← NEU: Zentrale Player-Registrierung
     [Server]
     public void RegisterPlayer(PlayerStats player)
     {
-        if (player == null)
-        {
-            Debug.LogError("[NetworkGameManager] Attempted to register null player!");
-            return;
-        }
+        if (player == null || registeredPlayers.Contains(player)) return;
 
-        // Prüfe ob Spieler bereits registriert ist
-        if (registeredPlayers.Contains(player))
-        {
-            Debug.LogWarning($"[NetworkGameManager] Player already registered: {player.ObjectId}");
-            return;
-        }
-
-        // Füge Spieler zur Liste hinzu
         registeredPlayers.Add(player);
-
-        // Vergebe Index basierend auf Position in der Liste
         int index = registeredPlayers.Count - 1;
         player.SetPlayerIndex(index);
 
-        Debug.Log($"[NetworkGameManager] Player registered with Index {index}, ObjectId: {player.ObjectId}, Total Players: {registeredPlayers.Count}");
+        Debug.Log($"[NetworkGameManager] Player registered with Index {index}");
     }
 
     [Server]
@@ -267,7 +194,19 @@ public class NetworkGameManager : NetworkBehaviour
         if (registeredPlayers.Contains(player))
         {
             registeredPlayers.Remove(player);
-            Debug.Log($"[NetworkGameManager] Player unregistered, Total Players: {registeredPlayers.Count}");
+        }
+    }
+
+    [Server]
+    public void SetPlayerName(int playerIndex, string name)
+    {
+        if (playerIndex == 0)
+        {
+            Player1Name.Value = name;
+        }
+        else if (playerIndex == 1)
+        {
+            Player2Name.Value = name;
         }
     }
 
@@ -276,41 +215,28 @@ public class NetworkGameManager : NetworkBehaviour
     #region Health System
 
     [Server]
-    public void SetPlayerHealth(int playerIndex, int health)
+    public void OnPlayerHealthChanged(int playerIndex, int newHealth)
     {
-        Debug.Log($"[NetworkGameManager] SetPlayerHealth called: Player {playerIndex} -> {health} HP");
-
         if (playerIndex == 0)
         {
-            healthP1.Value = health;
+            player1Health.Value = newHealth;
         }
         else if (playerIndex == 1)
         {
-            healthP2.Value = health;
+            player2Health.Value = newHealth;
         }
 
-        // Check for Game Over
-        if (healthP1.Value <= 0 && healthP2.Value <= 0)
-        {
-            GameOver();
-        }
+        Debug.Log($"[NetworkGameManager] Player {playerIndex} health updated to {newHealth}");
     }
 
     [Server]
     public void DamagePlayer(int playerIndex, int damage)
     {
-        if (gameState.Value != GameState.Playing)
-        {
-            Debug.LogWarning($"[NetworkGameManager] Attempted to damage player during {gameState.Value} state");
-            return;
-        }
+        if (gameState.Value != GameState.Playing) return;
 
-        Debug.Log($"[NetworkGameManager] DamagePlayer: Player {playerIndex} takes {damage} damage");
-
-        // ← GEÄNDERT: Nutze registeredPlayers Liste
         if (playerIndex < 0 || playerIndex >= registeredPlayers.Count)
         {
-            Debug.LogError($"[NetworkGameManager] Invalid player index: {playerIndex}, Total Players: {registeredPlayers.Count}");
+            Debug.LogError($"[NetworkGameManager] Invalid player index: {playerIndex}");
             return;
         }
 
@@ -320,10 +246,6 @@ public class NetworkGameManager : NetworkBehaviour
         {
             targetPlayer.TakeDamage(damage);
         }
-        else
-        {
-            Debug.LogWarning($"[NetworkGameManager] Player {playerIndex} not found or already dead");
-        }
     }
 
     [Server]
@@ -331,12 +253,7 @@ public class NetworkGameManager : NetworkBehaviour
     {
         if (gameState.Value != GameState.Playing) return;
 
-        // ← GEÄNDERT: Nutze registeredPlayers Liste
-        if (playerIndex < 0 || playerIndex >= registeredPlayers.Count)
-        {
-            Debug.LogError($"[NetworkGameManager] Invalid player index: {playerIndex}");
-            return;
-        }
+        if (playerIndex < 0 || playerIndex >= registeredPlayers.Count) return;
 
         PlayerStats targetPlayer = registeredPlayers[playerIndex];
 
@@ -348,7 +265,19 @@ public class NetworkGameManager : NetworkBehaviour
 
     public int GetPlayerHealth(int playerIndex)
     {
-        return playerIndex == 0 ? healthP1.Value : healthP2.Value;
+        return playerIndex == 0 ? player1Health.Value : player2Health.Value;
+    }
+
+    [Server]
+    public void CheckGameOver()
+    {
+        bool allDead = registeredPlayers.Count >= 2 &&
+                       registeredPlayers.All(p => p != null && !p.IsAlive());
+
+        if (allDead)
+        {
+            GameOver();
+        }
     }
 
     #endregion
@@ -362,15 +291,12 @@ public class NetworkGameManager : NetworkBehaviour
 
         enemiesKilled.Value++;
         totalScore.Value += scoreValue;
-
-        Debug.Log($"Enemy killed! Total Score: {totalScore.Value}, Enemies Killed: {enemiesKilled.Value}");
     }
 
     [Server]
     public void SetCurrentWave(int wave)
     {
         currentWave.Value = wave;
-        Debug.Log($"Current Wave set to: {wave}");
     }
 
     #endregion
@@ -379,11 +305,9 @@ public class NetworkGameManager : NetworkBehaviour
 
     private void OnStateChanged(GameState oldState, GameState newState, bool asServer)
     {
-        Debug.Log($"Game State Changed: {oldState} -> {newState}");
         UpdateStateText();
         UpdateGameUI();
 
-        // Spiel-spezifische State-Änderungen
         if (newState == GameState.Playing)
         {
             RpcOnGameStart();
@@ -400,20 +324,18 @@ public class NetworkGameManager : NetworkBehaviour
         Debug.Log("=== GAME OVER ===");
         gameState.Value = GameState.Finished;
 
-        // Stoppe Wave-Spawner
         if (waveSpawner != null)
         {
             waveSpawner.StopSpawning();
         }
 
-        // Entferne alle verbleibenden Enemies
         DestroyAllEnemies();
+        DestroyAllEnemyBullets(); // ← FIX 1: Destroy enemy bullets
     }
 
     [Server]
     private void DestroyAllEnemies()
     {
-        // Finde alle Enemies und zerstöre sie
         var enemies = FindObjectsByType<Enemy>(FindObjectsSortMode.None);
         foreach (var enemy in enemies)
         {
@@ -422,7 +344,21 @@ public class NetworkGameManager : NetworkBehaviour
                 ServerManager.Despawn(enemy.gameObject);
             }
         }
-        Debug.Log($"Destroyed {enemies.Length} remaining enemies");
+    }
+
+    // ← FIX 1: Neue Methode zum Zerstören aller Enemy Bullets
+    [Server]
+    private void DestroyAllEnemyBullets()
+    {
+        var bullets = FindObjectsByType<EnemyBullet>(FindObjectsSortMode.None);
+        foreach (var bullet in bullets)
+        {
+            if (bullet != null)
+            {
+                ServerManager.Despawn(bullet.gameObject);
+            }
+        }
+        Debug.Log($"[NetworkGameManager] Destroyed {bullets.Length} enemy bullets");
     }
 
     [Server]
@@ -431,52 +367,52 @@ public class NetworkGameManager : NetworkBehaviour
         totalScore.Value = 0;
         currentWave.Value = 0;
         enemiesKilled.Value = 0;
-        healthP1.Value = 100;
-        healthP2.Value = 100;
-        Player1.Value = "";
-        Player2.Value = "";
+        player1Health.Value = 100;
+        player2Health.Value = 100;
+        Player1Name.Value = "";
+        Player2Name.Value = "";
     }
 
     [Server]
     private void RestartGame()
     {
-        Debug.Log("=== RESTARTING GAME ===");
-
-        // Reset alle Stats
         ResetGame();
 
-        // Setze alle Spieler zurück auf "not ready"
-        var players = FindObjectsByType<PlayerMovement>(FindObjectsSortMode.None);
-        foreach (var player in players)
+        // ← FIX 2: Reset WaveSpawner
+        if (waveSpawner != null)
         {
-            player.ResetReadyState();
+            waveSpawner.ResetWaves();
         }
 
-        // Respawn alle Spieler
-        RespawnAllPlayers();
+        var players = FindObjectsByType<PlayerStats>(FindObjectsSortMode.None);
+        foreach (var player in players)
+        {
+            player.ResetReady();
+        }
 
-        // Starte das Spiel direkt neu
+        RespawnAllPlayers();
         StartGame();
     }
 
     [Server]
     public void ReturnToLobby()
     {
-        Debug.Log("=== RETURNING TO LOBBY ===");
-
         gameState.Value = GameState.WaitingForPlayers;
         ResetGame();
 
-        // Setze alle Spieler zurück auf "not ready"
-        var players = FindObjectsByType<PlayerMovement>(FindObjectsSortMode.None);
-        foreach (var player in players)
+        // ← FIX 2: Reset WaveSpawner auch bei Return to Lobby
+        if (waveSpawner != null)
         {
-            player.ResetReadyState();
+            waveSpawner.ResetWaves();
         }
 
-        // Respawn alle Spieler für die Lobby
-        RespawnAllPlayers();
+        var players = FindObjectsByType<PlayerStats>(FindObjectsSortMode.None);
+        foreach (var player in players)
+        {
+            player.ResetReady();
+        }
 
+        RespawnAllPlayers();
         RpcReturnToLobby();
     }
 
@@ -496,12 +432,8 @@ public class NetworkGameManager : NetworkBehaviour
     [ObserversRpc]
     private void RpcReturnToLobby()
     {
-        Debug.Log("RpcReturnToLobby called");
-
-        // Zurück zum Lobby Panel
         ShowPanel(lobbyPanel);
 
-        // Reset UI
         if (PlayerNameField != null)
         {
             PlayerNameField.interactable = true;
@@ -519,19 +451,14 @@ public class NetworkGameManager : NetworkBehaviour
     [ObserversRpc]
     private void RpcOnGameStart()
     {
-        Debug.Log("✓✓✓ Game Started! ✓✓✓");
         ShowPanel(gamePanel);
     }
 
     [ObserversRpc]
     private void RpcOnGameEnd()
     {
-        Debug.Log($"Game Over! Final Score: {totalScore.Value}, Waves Survived: {currentWave.Value}");
-
-        // Zeige GameOver Panel
         ShowPanel(gameOverPanel);
 
-        // Update GameOver Stats
         if (finalScoreText != null)
             finalScoreText.text = $"Final Score: {totalScore.Value}";
         if (finalWaveText != null)
@@ -550,10 +477,8 @@ public class NetworkGameManager : NetworkBehaviour
             gameOverPanel.SetActive(panelToShow == gameOverPanel);
     }
 
-    // Button Callbacks
     private void OnRestartButtonClicked()
     {
-        Debug.Log("Restart button clicked");
         if (IsServerStarted)
         {
             RestartGame();
@@ -566,7 +491,6 @@ public class NetworkGameManager : NetworkBehaviour
 
     private void OnReturnToLobbyButtonClicked()
     {
-        Debug.Log("Return to Lobby button clicked");
         if (IsServerStarted)
         {
             ReturnToLobby();
@@ -613,20 +537,17 @@ public class NetworkGameManager : NetworkBehaviour
 
     private void UpdateGameUI()
     {
-        // Score
         if (scoreText != null)
             scoreText.text = $"Score: {totalScore.Value}";
 
-        // Wave
         if (waveText != null)
             waveText.text = $"Wave: {currentWave.Value}";
 
-        // Health
         if (healthP1Text != null)
-            healthP1Text.text = $"P1: {healthP1.Value} HP";
+            healthP1Text.text = $"P1: {player1Health.Value} HP";
 
         if (healthP2Text != null)
-            healthP2Text.text = $"P2: {healthP2.Value} HP";
+            healthP2Text.text = $"P2: {player2Health.Value} HP";
     }
 
     #endregion
