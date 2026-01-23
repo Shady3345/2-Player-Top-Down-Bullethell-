@@ -6,17 +6,18 @@ In diesem wellenbasierten Co-op Top-Down-Shooter kämpfen zwei Spieler gemeinsam
 
 Anlteitung zum Starten von Host und Client
 
-  Voraussetzungen
-  - Unity 6000.0.62f1 + FishNet Networking installiert
+  - Voraussetzungen
 
-  Host
-  - Windows Defender Firewall: Neue eingehende Regel ->  Typ: Port Protokoll: UDP Port: (siehe Tugboat) -> Verbindung zulassen -> Häkchen bei allen Profilen setzen ODER Firewall deaktivieren
-  - Server starten
-  - Client starten
+    - Unity 6000.0.62f1 + FishNet Networking installiert
 
-  Client
-  - Tugboat: IP-Adresse des Hosts eingeben
-  - Client starten
+  - Host
+    - Windows Defender Firewall: Neue eingehende Regel ->  Typ: Port Protokoll: UDP Port: (siehe Tugboat) -> Verbindung zulassen -> Häkchen bei allen Profilen setzen ODER Firewall deaktivieren
+    - Server starten
+    - Client starten
+
+  - Client
+    - Tugboat: IP-Adresse des Hosts eingeben
+    - Client starten
 
 Technischer Überblick
 
