@@ -24,7 +24,6 @@ public class PlayerBullet : NetworkBehaviour
     {
         if (!IsServerStarted) return;
 
-        // Trifft Enemy
         if (other.CompareTag("Enemy"))
         {
             Enemy enemy = other.GetComponent<Enemy>();

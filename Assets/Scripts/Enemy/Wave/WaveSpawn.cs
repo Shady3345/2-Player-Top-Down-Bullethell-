@@ -145,13 +145,13 @@ public class WaveSpawn : NetworkBehaviour
     [ObserversRpc]
     private void RpcAnnounceWave(int wave)
     {
-        Debug.Log($"Wave {wave} startet!");
+        Debug.Log($"Wave {wave} started!");
     }
 
     [ObserversRpc]
     private void RpcAnnounceWaveComplete(int wave)
     {
-        Debug.Log($"Wave {wave} abgeschlossen!");
+        Debug.Log($"Wave {wave} completed!");
     }
 
     public int GetCurrentWave() => currentWave.Value;
@@ -165,7 +165,6 @@ public class WaveSpawn : NetworkBehaviour
         isSpawning = false;
     }
 
-    // ← FIX 2: Neue Methode zum Zurücksetzen der Waves
     [Server]
     public void ResetWaves()
     {
@@ -176,6 +175,6 @@ public class WaveSpawn : NetworkBehaviour
         waveInProgress.Value = false;
         spawnedEnemies.Clear();
 
-        Debug.Log("[WaveSpawn] Waves reset to 0");
+        Debug.Log("Waves reset to 0");
     }
 }

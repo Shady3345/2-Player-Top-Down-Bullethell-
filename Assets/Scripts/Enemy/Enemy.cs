@@ -34,14 +34,14 @@ public class Enemy : NetworkBehaviour
     {
         if (!IsServerStarted) return;
 
-        // Periodisches Re-Targeting
+        // Periodic re-targeting
         if (Time.time >= nextRetargetTime)
         {
             FindClosestPlayer();
             nextRetargetTime = Time.time + retargetInterval;
         }
 
-        // Früher Exit wenn kein Ziel
+        // Early exit if no target
         if (targetPlayer == null || !targetPlayer.IsAlive())
         {
             targetPlayer = null;
@@ -53,7 +53,6 @@ public class Enemy : NetworkBehaviour
         HandleShooting();
     }
 
-    // ← VERBESSERT: Nutze GameManager statt FindGameObjectsWithTag
     private void FindClosestPlayer()
     {
         if (NetworkGameManager.Instance == null)
@@ -62,7 +61,6 @@ public class Enemy : NetworkBehaviour
             return;
         }
 
-        // ← NEU: Hole alle registrierten Spieler vom GameManager
         var allPlayers = FindObjectsByType<PlayerStats>(FindObjectsSortMode.None);
 
         float closestDistance = float.MaxValue;
@@ -70,7 +68,7 @@ public class Enemy : NetworkBehaviour
 
         foreach (var player in allPlayers)
         {
-            // Überspringe tote Spieler
+            // Skip dead players
             if (player == null || !player.IsAlive())
                 continue;
 
@@ -82,22 +80,15 @@ public class Enemy : NetworkBehaviour
             }
         }
 
-        // Target nur ändern wenn neues gefunden wurde
-        if (newTarget != null && targetPlayer != newTarget)
-        {
-            Debug.Log($"[Enemy] Switching target to Player {newTarget.GetPlayerIndex()}");
-        }
-
         targetPlayer = newTarget;
     }
 
-    // Wird von PlayerStats aufgerufen wenn Spieler stirbt
+    // Called by PlayerStats when player dies
     [Server]
     public void OnPlayerDied(GameObject deadPlayer)
     {
         if (targetPlayer != null && targetPlayer.gameObject == deadPlayer)
         {
-            Debug.Log($"[Enemy] Current target died, finding new target...");
             targetPlayer = null;
             FindClosestPlayer();
         }

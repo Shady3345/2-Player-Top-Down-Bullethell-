@@ -33,11 +33,6 @@ public class EnemyBullet : NetworkBehaviour
             }
             ServerManager.Despawn(gameObject);
         }
-
-        if (other.CompareTag("Wall"))
-        {
-            ServerManager.Despawn(gameObject);
-        }
     }
 
     private void OnBecameInvisible()

@@ -25,7 +25,7 @@ public class PlayerStats : NetworkBehaviour
     private Vector3 initialPosition;
     private Quaternion initialRotation;
 
-    // Public Getters
+    // Public getters
     public bool IsReady => isReady.Value;
     public string PlayerName => playerName.Value;
     public int GetCurrentHealth() => currentHealth.Value;
@@ -69,7 +69,7 @@ public class PlayerStats : NetworkBehaviour
         }
         else
         {
-            Debug.LogError("[PlayerStats] NetworkGameManager Instance not found!");
+            Debug.LogError("NetworkGameManager Instance not found");
         }
     }
 
@@ -77,7 +77,6 @@ public class PlayerStats : NetworkBehaviour
     public void SetPlayerIndex(int index)
     {
         playerIndex.Value = index;
-        Debug.Log($"[PlayerStats] Player Index set to: {index}");
     }
 
     private void Update()
@@ -100,7 +99,6 @@ public class PlayerStats : NetworkBehaviour
         if (currentHealth.Value <= 0) return;
 
         currentHealth.Value = Mathf.Max(0, currentHealth.Value - damage);
-        Debug.Log($"[PlayerStats] Player {playerIndex.Value} took {damage} damage! Health: {currentHealth.Value}/{maxHealth}");
 
         if (currentHealth.Value <= 0)
         {
@@ -121,9 +119,7 @@ public class PlayerStats : NetworkBehaviour
 
     private void OnHealthChanged(int prev, int next, bool asServer)
     {
-        Debug.Log($"[PlayerStats] Player {playerIndex.Value} health changed: {prev} -> {next} (IsServer: {asServer})");
-
-        // ← NEU: Benachrichtige GameManager über Health-Änderung
+        // Notify GameManager about health change
         if (NetworkGameManager.Instance != null && playerIndex.Value >= 0)
         {
             NetworkGameManager.Instance.OnPlayerHealthChanged(playerIndex.Value, next);
@@ -137,20 +133,12 @@ public class PlayerStats : NetworkBehaviour
 
     private void OnHealthChangedClient(int prev, int next)
     {
-        if (next < prev)
-        {
-            Debug.Log("[PlayerStats] Visual: Player took damage!");
-        }
-        else if (next > prev)
-        {
-            Debug.Log("[PlayerStats] Visual: Player healed!");
-        }
+        // Visual feedback can be added here
     }
 
     private void Die()
     {
         if (!IsServerStarted) return;
-        Debug.Log($"[PlayerStats] Player {playerIndex.Value} died!");
 
         DisablePlayer();
         NotifyEnemiesOfDeath();
@@ -225,8 +213,6 @@ public class PlayerStats : NetworkBehaviour
     [Server]
     public void Respawn()
     {
-        Debug.Log($"[PlayerStats] Respawning Player {playerIndex.Value}");
-
         currentHealth.Value = maxHealth;
         isInvincible.Value = false;
 

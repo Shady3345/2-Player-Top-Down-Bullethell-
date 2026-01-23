@@ -87,7 +87,7 @@ public class PlayerMovement : NetworkBehaviour
     {
         if (!IsOwner) return;
 
-        // Nur Bewegung erlauben wenn das Spiel läuft
+        // Only allow movement when game is playing
         if (NetworkGameManager.Instance != null && NetworkGameManager.Instance.IsGamePlaying())
         {
             HandleInput();

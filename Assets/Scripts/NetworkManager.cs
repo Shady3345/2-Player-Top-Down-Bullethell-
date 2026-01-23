@@ -54,7 +54,7 @@ public class NetworkGameManager : NetworkBehaviour
 
     [Header("References")]
     public WaveSpawn waveSpawner;
-    public HighscoreManager highscoreManager; // ← NEU: Highscore Manager Referenz
+    public HighscoreManager highscoreManager;
 
     private List<PlayerStats> registeredPlayers = new List<PlayerStats>();
 
@@ -161,7 +161,6 @@ public class NetworkGameManager : NetworkBehaviour
 
         if (players.Length >= 2 && players.All(p => p.IsReady))
         {
-            Debug.Log("✓ Both players ready - Starting game!");
             StartGame();
         }
     }
@@ -185,8 +184,6 @@ public class NetworkGameManager : NetworkBehaviour
         registeredPlayers.Add(player);
         int index = registeredPlayers.Count - 1;
         player.SetPlayerIndex(index);
-
-        Debug.Log($"[NetworkGameManager] Player registered with Index {index}");
     }
 
     [Server]
@@ -226,8 +223,6 @@ public class NetworkGameManager : NetworkBehaviour
         {
             player2Health.Value = newHealth;
         }
-
-        Debug.Log($"[NetworkGameManager] Player {playerIndex} health updated to {newHealth}");
     }
 
     [Server]
@@ -237,7 +232,7 @@ public class NetworkGameManager : NetworkBehaviour
 
         if (playerIndex < 0 || playerIndex >= registeredPlayers.Count)
         {
-            Debug.LogError($"[NetworkGameManager] Invalid player index: {playerIndex}");
+            Debug.LogError($"Invalid player index: {playerIndex}");
             return;
         }
 
@@ -322,7 +317,6 @@ public class NetworkGameManager : NetworkBehaviour
     [Server]
     private void GameOver()
     {
-        Debug.Log("=== GAME OVER ===");
         gameState.Value = GameState.Finished;
 
         if (waveSpawner != null)
@@ -331,9 +325,8 @@ public class NetworkGameManager : NetworkBehaviour
         }
 
         DestroyAllEnemies();
-        DestroyAllEnemyBullets(); // ← FIX 1: Destroy enemy bullets
+        DestroyAllEnemyBullets();
 
-        // ← NEU: Highscore hochladen
         SubmitHighscore();
     }
 
@@ -350,7 +343,6 @@ public class NetworkGameManager : NetworkBehaviour
         }
     }
 
-    // ← FIX 1: Neue Methode zum Zerstören aller Enemy Bullets
     [Server]
     private void DestroyAllEnemyBullets()
     {
@@ -362,7 +354,6 @@ public class NetworkGameManager : NetworkBehaviour
                 ServerManager.Despawn(bullet.gameObject);
             }
         }
-        Debug.Log($"[NetworkGameManager] Destroyed {bullets.Length} enemy bullets");
     }
 
     [Server]
@@ -382,7 +373,6 @@ public class NetworkGameManager : NetworkBehaviour
     {
         ResetGame();
 
-        // ← FIX 2: Reset WaveSpawner
         if (waveSpawner != null)
         {
             waveSpawner.ResetWaves();
@@ -404,7 +394,6 @@ public class NetworkGameManager : NetworkBehaviour
         gameState.Value = GameState.WaitingForPlayers;
         ResetGame();
 
-        // ← FIX 2: Reset WaveSpawner auch bei Return to Lobby
         if (waveSpawner != null)
         {
             waveSpawner.ResetWaves();
@@ -470,7 +459,6 @@ public class NetworkGameManager : NetworkBehaviour
         if (gameOverMessageText != null)
             gameOverMessageText.text = "GAME OVER\nBoth Players Defeated!";
 
-        // ← NEU: Lade Highscores nach kurzer Pause
         Invoke(nameof(LoadHighscores), 0.5f);
     }
 
@@ -537,20 +525,16 @@ public class NetworkGameManager : NetworkBehaviour
     {
         if (highscoreManager == null)
         {
-            Debug.LogWarning("[NetworkGameManager] HighscoreManager not assigned!");
+            Debug.LogWarning("HighscoreManager not assigned");
             return;
         }
 
-        // Erstelle Team-Namen aus beiden Spielern
         string player1 = string.IsNullOrEmpty(Player1Name.Value) ? "Player1" : Player1Name.Value;
         string player2 = string.IsNullOrEmpty(Player2Name.Value) ? "Player2" : Player2Name.Value;
         string teamName = $"{player1} & {player2}";
 
         int finalScore = totalScore.Value;
 
-        Debug.Log($"[NetworkGameManager] Submitting Highscore: {teamName} - {finalScore} points");
-
-        // Sende Score an Server (nur vom Server aus)
         highscoreManager.SubmitScore(teamName, finalScore);
     }
 
