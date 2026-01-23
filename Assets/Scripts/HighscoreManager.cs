@@ -1,131 +1,93 @@
 ﻿using UnityEngine;
-using UnityEngine.Networking;
-using System.Collections;
-using System.Collections.Generic;
-using TMPro;
+using UnityEngine.InputSystem;
 
-public class HighscoreManager : MonoBehaviour
+/// <summary>
+/// Debug helper to inspect Input System actions, bindings,
+/// and to verify whether inputs are actually being triggered.
+/// </summary>
+public class InputDebugger : MonoBehaviour
 {
-    [Header("Settings")]
-    public string addScoreURL = "http://localhost/highscore/addscore.php";
-    public string getScoreURL = "http://localhost/highscore/getscores.php";
-    public string secretKey = "Key1234";
+    // Generated Input Actions class from the Input System
+    private InputSystem_Actions inputActions;
 
-    [Header("UI References")]
-    public Transform scoreContainer;
-    public GameObject scoreItemPrefab;
-
-    public void SubmitScore(string name, int score)
+    private void Awake()
     {
-        StartCoroutine(PostScore(name, score));
-    }
+        Debug.Log("=== INPUT DEBUGGER STARTED ===");
 
-    private IEnumerator PostScore(string name, int score)
-    {
-        string hash = Md5Sum(name + score + secretKey);
+        // Create a new instance of the input actions
+        inputActions = new InputSystem_Actions();
 
-        WWWForm form = new WWWForm();
-        form.AddField("name", name);
-        form.AddField("score", score);
-        form.AddField("hash", hash);
+        // Log the name of the Input Actions asset
+        Debug.Log($"Input Actions Asset: {inputActions.asset.name}");
 
-        using (UnityWebRequest www = UnityWebRequest.Post(addScoreURL, form))
+        // Iterate through all action maps
+        foreach (var actionMap in inputActions.asset.actionMaps)
         {
-            yield return www.SendWebRequest();
+            Debug.Log($"Action Map: {actionMap.name}");
 
-            if (www.result == UnityWebRequest.Result.Success)
+            // Iterate through all actions in the map
+            foreach (var action in actionMap.actions)
             {
-                Debug.Log("Score successfully submitted");
-            }
-            else
-            {
-                Debug.LogError($"Failed to submit score: {www.error}");
-            }
-        }
-    }
+                Debug.Log($"  - Action: {action.name}");
 
-    public void RefreshHighscores()
-    {
-        StartCoroutine(GetScores());
-    }
-
-    private IEnumerator GetScores()
-    {
-        // Clear old entries
-        foreach (Transform child in scoreContainer)
-        {
-            Destroy(child.gameObject);
-        }
-
-        using (UnityWebRequest www = UnityWebRequest.Get(getScoreURL))
-        {
-            yield return www.SendWebRequest();
-
-            if (www.result == UnityWebRequest.Result.Success)
-            {
-                string jsonText = www.downloadHandler.text;
-
-                if (string.IsNullOrEmpty(jsonText))
+                // Log all bindings for the action
+                foreach (var binding in action.bindings)
                 {
-                    Debug.LogError("Response is empty");
-                    yield break;
-                }
-
-                try
-                {
-                    HighscoreData data = JsonUtility.FromJson<HighscoreData>(jsonText);
-
-                    if (data == null || data.items == null)
-                    {
-                        Debug.LogError("Failed to parse JSON or items is null");
-                        yield break;
-                    }
-
-                    foreach (ScoreEntry entry in data.items)
-                    {
-                        GameObject go = Instantiate(scoreItemPrefab, scoreContainer);
-                        go.GetComponent<TextMeshProUGUI>().text = $"{entry.username}: {entry.score}";
-                    }
-                }
-                catch (System.Exception e)
-                {
-                    Debug.LogError($"JSON Parse Error: {e.Message}");
+                    Debug.Log(
+                        $"    > Binding: {binding.path} (effectivePath: {binding.effectivePath})"
+                    );
                 }
             }
-            else
-            {
-                Debug.LogError($"Web Request Failed: {www.error}");
-            }
         }
     }
 
-    private string Md5Sum(string strToEncrypt)
+    private void OnEnable()
     {
-        using (var md5 = System.Security.Cryptography.MD5.Create())
-        {
-            byte[] inputBytes = System.Text.Encoding.UTF8.GetBytes(strToEncrypt);
-            byte[] hashBytes = md5.ComputeHash(inputBytes);
+        // Enable all input actions
+        inputActions.Enable();
 
-            System.Text.StringBuilder sb = new System.Text.StringBuilder();
-            for (int i = 0; i < hashBytes.Length; i++)
-            {
-                sb.Append(hashBytes[i].ToString("x2"));
-            }
-            return sb.ToString();
+        // Test the Attack action
+        if (inputActions.Player.Attack != null)
+        {
+            Debug.Log("Attack Action found!");
+
+            inputActions.Player.Attack.started +=
+                ctx => Debug.Log("*** ATTACK STARTED! ***");
+
+            inputActions.Player.Attack.performed +=
+                ctx => Debug.Log("*** ATTACK PERFORMED! ***");
+
+            inputActions.Player.Attack.canceled +=
+                ctx => Debug.Log("*** ATTACK CANCELED! ***");
+        }
+        else
+        {
+            Debug.LogError("Attack Action not found!");
         }
     }
-}
 
-// Data classes for JSON
-[System.Serializable]
-public class ScoreEntry
-{
-    public string username;
-    public int score;
-}
+    private void OnDisable()
+    {
+        // Disable input actions when the object is disabled
+        inputActions?.Disable();
+    }
 
-[System.Serializable]
-public class HighscoreData
-{
-    public ScoreEntry[] items;
+    private void Update()
+    {
+        // Directly test raw keyboard and mouse inputs
+        if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+        {
+            Debug.Log("DIRECT: Left mouse button pressed!");
+        }
+
+        if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
+        {
+            Debug.Log("DIRECT: Spacebar pressed!");
+        }
+
+        if (Keyboard.current != null && Keyboard.current.enterKey.wasPressedThisFrame)
+        {
+            Debug.Log("DIRECT: Enter key pressed!");
+        }
+    }
 }

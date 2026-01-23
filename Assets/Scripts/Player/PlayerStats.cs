@@ -2,30 +2,60 @@
 using FishNet.Object.Synchronizing;
 using UnityEngine;
 
+/// <summary>
+/// Handles all player state and lifecycle logic:
+/// - Health & damage
+/// - Temporary invincibility
+/// - Death & respawn
+/// - Ready system for lobby / game start
+/// - Server-authoritative state with SyncVars
+/// </summary>
 public class PlayerStats : NetworkBehaviour
 {
+    #region Health
+
     [Header("Health")]
     public int maxHealth = 100;
     private readonly SyncVar<int> currentHealth = new SyncVar<int>();
+
+    #endregion
+
+    #region Invincibility
 
     [Header("Invincibility")]
     public float invincibilityDuration = 1f;
     private readonly SyncVar<bool> isInvincible = new SyncVar<bool>();
     private float invincibilityTimer = 0f;
 
+    #endregion
+
+    #region Respawn
+
     [Header("Respawn")]
     public Transform[] spawnPoints;
+
+    #endregion
+
+    #region Ready System
 
     [Header("Ready System")]
     private readonly SyncVar<bool> isReady = new SyncVar<bool>(false);
     private readonly SyncVar<string> playerName = new SyncVar<string>("");
 
-    private readonly SyncVar<int> playerIndex = new SyncVar<int>(new SyncTypeSettings(WritePermission.ServerOnly, ReadPermission.Observers));
+    // Server-only write, readable by all observers
+    private readonly SyncVar<int> playerIndex =
+        new SyncVar<int>(new SyncTypeSettings(
+            WritePermission.ServerOnly,
+            ReadPermission.Observers));
 
+    #endregion
+
+    // Initial transform for fallback respawn
     private Vector3 initialPosition;
     private Quaternion initialRotation;
 
-    // Public getters
+    #region Public Getters
+
     public bool IsReady => isReady.Value;
     public string PlayerName => playerName.Value;
     public int GetCurrentHealth() => currentHealth.Value;
@@ -33,11 +63,16 @@ public class PlayerStats : NetworkBehaviour
     public bool IsInvincible() => isInvincible.Value;
     public bool IsAlive() => currentHealth.Value > 0;
 
+    #endregion
+
     public override void OnStartNetwork()
     {
         base.OnStartNetwork();
+
+        // Subscribe to health changes
         currentHealth.OnChange += OnHealthChanged;
 
+        // Cache initial transform
         initialPosition = transform.position;
         initialRotation = transform.rotation;
 
@@ -52,6 +87,7 @@ public class PlayerStats : NetworkBehaviour
     public override void OnStopNetwork()
     {
         base.OnStopNetwork();
+
         currentHealth.OnChange -= OnHealthChanged;
 
         if (IsServerStarted && NetworkGameManager.Instance != null)
@@ -59,6 +95,8 @@ public class PlayerStats : NetworkBehaviour
             NetworkGameManager.Instance.UnregisterPlayer(this);
         }
     }
+
+    #region Registration
 
     [Server]
     private void RegisterWithGameManager()
@@ -79,19 +117,27 @@ public class PlayerStats : NetworkBehaviour
         playerIndex.Value = index;
     }
 
+    #endregion
+
     private void Update()
     {
+        // Server-side invincibility timer
         if (IsServerStarted && isInvincible.Value)
         {
             invincibilityTimer -= Time.deltaTime;
 
-            if (invincibilityTimer <= 0)
+            if (invincibilityTimer <= 0f)
             {
                 isInvincible.Value = false;
             }
         }
     }
 
+    #region Health Logic
+
+    /// <summary>
+    /// Applies damage to the player (server-authoritative).
+    /// </summary>
     public void TakeDamage(int damage)
     {
         if (!IsServerStarted) return;
@@ -106,25 +152,34 @@ public class PlayerStats : NetworkBehaviour
         }
         else
         {
+            // Activate temporary invincibility
             isInvincible.Value = true;
             invincibilityTimer = invincibilityDuration;
         }
     }
 
+    /// <summary>
+    /// Heals the player up to max health.
+    /// </summary>
     public void Heal(int amount)
     {
         if (!IsServerStarted) return;
         currentHealth.Value = Mathf.Min(currentHealth.Value + amount, maxHealth);
     }
 
+    #endregion
+
+    #region Health Change Callback
+
     private void OnHealthChanged(int prev, int next, bool asServer)
     {
-        // Notify GameManager about health change
+        // Inform GameManager
         if (NetworkGameManager.Instance != null && playerIndex.Value >= 0)
         {
             NetworkGameManager.Instance.OnPlayerHealthChanged(playerIndex.Value, next);
         }
 
+        // Client-side visuals
         if (IsClientStarted)
         {
             OnHealthChangedClient(prev, next);
@@ -133,9 +188,16 @@ public class PlayerStats : NetworkBehaviour
 
     private void OnHealthChangedClient(int prev, int next)
     {
-        // Visual feedback can be added here
+        // Visual feedback (UI, flash, effects) can be added here
     }
 
+    #endregion
+
+    #region Death & Respawn
+
+    /// <summary>
+    /// Handles player death on the server.
+    /// </summary>
     private void Die()
     {
         if (!IsServerStarted) return;
@@ -149,67 +211,39 @@ public class PlayerStats : NetworkBehaviour
         }
     }
 
+    /// <summary>
+    /// Notifies all enemies that this player died,
+    /// so they can re-target.
+    /// </summary>
     [Server]
     private void NotifyEnemiesOfDeath()
     {
         var enemies = FindObjectsByType<Enemy>(FindObjectsSortMode.None);
         foreach (var enemy in enemies)
         {
-            if (enemy != null)
-            {
-                enemy.OnPlayerDied(gameObject);
-            }
+            enemy?.OnPlayerDied(gameObject);
         }
     }
 
+    /// <summary>
+    /// Disables player components on the server and clients.
+    /// </summary>
     [Server]
     private void DisablePlayer()
     {
-        var movement = GetComponent<PlayerMovement>();
-        if (movement != null) movement.enabled = false;
-
-        var shooting = GetComponent<PlayerShoot>();
-        if (shooting != null) shooting.enabled = false;
-
-        var collider = GetComponent<Collider2D>();
-        if (collider != null) collider.enabled = false;
-
-        var renderer = GetComponent<SpriteRenderer>();
-        if (renderer != null) renderer.enabled = false;
-
-        var rb = GetComponent<Rigidbody2D>();
-        if (rb != null)
-        {
-            rb.linearVelocity = Vector2.zero;
-            rb.angularVelocity = 0f;
-        }
-
+        TogglePlayerComponents(false);
         RpcDisablePlayer();
     }
 
     [ObserversRpc]
     private void RpcDisablePlayer()
     {
-        var movement = GetComponent<PlayerMovement>();
-        if (movement != null) movement.enabled = false;
-
-        var shooting = GetComponent<PlayerShoot>();
-        if (shooting != null) shooting.enabled = false;
-
-        var collider = GetComponent<Collider2D>();
-        if (collider != null) collider.enabled = false;
-
-        var renderer = GetComponent<SpriteRenderer>();
-        if (renderer != null) renderer.enabled = false;
-
-        var rb = GetComponent<Rigidbody2D>();
-        if (rb != null)
-        {
-            rb.linearVelocity = Vector2.zero;
-            rb.angularVelocity = 0f;
-        }
+        TogglePlayerComponents(false);
     }
 
+    /// <summary>
+    /// Respawns the player at a spawn point.
+    /// </summary>
     [Server]
     public void Respawn()
     {
@@ -219,7 +253,9 @@ public class PlayerStats : NetworkBehaviour
         Vector3 spawnPosition = initialPosition;
         Quaternion spawnRotation = initialRotation;
 
-        if (spawnPoints != null && spawnPoints.Length > 0 && playerIndex.Value >= 0)
+        if (spawnPoints != null &&
+            spawnPoints.Length > 0 &&
+            playerIndex.Value >= 0)
         {
             int spawnIndex = Mathf.Min(playerIndex.Value, spawnPoints.Length - 1);
             if (spawnPoints[spawnIndex] != null)
@@ -239,24 +275,7 @@ public class PlayerStats : NetworkBehaviour
     [Server]
     private void EnablePlayer()
     {
-        var movement = GetComponent<PlayerMovement>();
-        if (movement != null) movement.enabled = true;
-
-        var shooting = GetComponent<PlayerShoot>();
-        if (shooting != null) shooting.enabled = true;
-
-        var collider = GetComponent<Collider2D>();
-        if (collider != null) collider.enabled = true;
-
-        var renderer = GetComponent<SpriteRenderer>();
-        if (renderer != null) renderer.enabled = true;
-
-        var rb = GetComponent<Rigidbody2D>();
-        if (rb != null)
-        {
-            rb.linearVelocity = Vector2.zero;
-            rb.angularVelocity = 0f;
-        }
+        TogglePlayerComponents(true);
     }
 
     [ObserversRpc]
@@ -264,18 +283,25 @@ public class PlayerStats : NetworkBehaviour
     {
         transform.position = position;
         transform.rotation = rotation;
+        TogglePlayerComponents(true);
+    }
 
+    /// <summary>
+    /// Enables or disables all gameplay-related components.
+    /// </summary>
+    private void TogglePlayerComponents(bool enabled)
+    {
         var movement = GetComponent<PlayerMovement>();
-        if (movement != null) movement.enabled = true;
+        if (movement != null) movement.enabled = enabled;
 
         var shooting = GetComponent<PlayerShoot>();
-        if (shooting != null) shooting.enabled = true;
+        if (shooting != null) shooting.enabled = enabled;
 
         var collider = GetComponent<Collider2D>();
-        if (collider != null) collider.enabled = true;
+        if (collider != null) collider.enabled = enabled;
 
         var renderer = GetComponent<SpriteRenderer>();
-        if (renderer != null) renderer.enabled = true;
+        if (renderer != null) renderer.enabled = enabled;
 
         var rb = GetComponent<Rigidbody2D>();
         if (rb != null)
@@ -285,8 +311,13 @@ public class PlayerStats : NetworkBehaviour
         }
     }
 
+    #endregion
+
     #region Ready System
 
+    /// <summary>
+    /// Toggles ready state and sets player name.
+    /// </summary>
     [ServerRpc]
     public void SetReadyServerRpc(string name)
     {
@@ -294,7 +325,8 @@ public class PlayerStats : NetworkBehaviour
         {
             playerName.Value = name;
 
-            if (NetworkGameManager.Instance != null && playerIndex.Value >= 0)
+            if (NetworkGameManager.Instance != null &&
+                playerIndex.Value >= 0)
             {
                 NetworkGameManager.Instance.SetPlayerName(playerIndex.Value, name);
             }
