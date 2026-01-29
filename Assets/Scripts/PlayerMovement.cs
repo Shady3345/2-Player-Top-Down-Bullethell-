@@ -1,39 +1,88 @@
 ﻿using UnityEngine;
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Rigidbody2D))]
-public class PlayerMovement : MonoBehaviour
+public class PlayerController : MonoBehaviour
 {
-    public float moveSpeed = 5f;
+    [Header("Movement")]
+    [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float jumpForce = 12f;
 
-    private Rigidbody2D rb;
-    private Vector2 moveDir;
+    [Header("Ground Check")]
+    [SerializeField] private Transform groundCheck;
+    [SerializeField] private float groundCheckRadius = 0.2f;
+    [SerializeField] private LayerMask groundLayer;
 
-    void Awake()
+    [Header("Coyote Time")]
+    [SerializeField] private float coyoteTime = 0.2f;
+
+    private Rigidbody2D _rb;
+    private bool _isGrounded;
+    private float _moveInput;
+    private float _coyoteTimeCounter;
+
+    private void Awake()
     {
-        rb = GetComponent<Rigidbody2D>();
-        rb.gravityScale = 0f; // Ensure no gravity for top-down movement
+        _rb = GetComponent<Rigidbody2D>();
     }
 
-    void Update()
+    private void Update()
     {
-        InputManager();
+        // Coyote Time Counter
+        if (_isGrounded)
+        {
+            _coyoteTimeCounter = coyoteTime;
+        }
+        else
+        {
+            _coyoteTimeCounter -= Time.deltaTime;
+        }
     }
 
-    void FixedUpdate()
+    private void FixedUpdate()
     {
-        Move();
+        // Ground Check
+        _isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
+
+        // Movement
+        _rb.linearVelocity = new Vector2(_moveInput * moveSpeed, _rb.linearVelocity.y);
     }
 
-    void InputManager()
+    // Called by PlayerInput component
+    public void OnMove(InputValue value)
     {
-        float moveX = Input.GetAxisRaw("Horizontal");
-        float moveY = Input.GetAxisRaw("Vertical");
-
-        moveDir = new Vector2(moveX, moveY).normalized;
+        _moveInput = value.Get<Vector2>().x;
     }
 
-    void Move()
+    // Called by PlayerInput component
+    public void OnJump(InputValue value)
     {
-        rb.linearVelocity = moveDir * moveSpeed;
+        if (value.isPressed && _coyoteTimeCounter > 0f)
+        {
+            Jump();
+        }
+    }
+
+    private void Jump()
+    {
+        _rb.linearVelocity = new Vector2(_rb.linearVelocity.x, jumpForce);
+        _coyoteTimeCounter = 0f;
+    }
+
+    // Public method for respawning (can be called from other scripts if needed)
+    public void Respawn(Vector3 position)
+    {
+        transform.position = position;
+        _rb.linearVelocity = Vector2.zero;
+        _coyoteTimeCounter = 0f;
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        if (groundCheck != null)
+        {
+            Gizmos.color = _isGrounded ? Color.green : Color.red;
+            Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
+        }
     }
 }
